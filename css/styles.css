@@ -1,0 +1,161 @@
+*{
+	box-sizing: border-box !important;
+}
+
+body{
+	padding: 0;
+	margin: 0;
+	min-height: 100vh;
+	background-color: #aaa;
+	display: flex;
+	flex-direction: column;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.pageWidth{
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 10px;
+	background-color: #fff;
+	min-height: 100%;
+}
+
+.scrollOverflow{
+	width: 100%;
+	height: 90vh;
+	position: relative;
+}
+
+.scrollOverflow::after{
+	content: '~';
+	font-size: 144px;
+	width: 100%;
+	position: absolute;
+	text-align: center;
+	bottom: 0;
+}
+
+main{
+	flex-grow: 1;
+}
+
+main .pageWidth{
+	position: relative;
+}
+
+main p {
+	line-height: 1.5em;
+}
+
+h1, h2, h3, h3 a{
+	color: dodgerblue;
+}
+
+.navHolder{
+	width: 100%;
+	background-color: #eee;
+	border-bottom: 2px solid dodgerblue;
+}
+
+nav{
+	max-width: 960px;
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-around;
+}
+
+nav a{
+	padding: 10px;
+	font-size: 1.3rem;
+	flex-grow: 1;
+	text-align: center;
+	text-decoration: none;
+	color: dodgerblue;
+}
+
+nav a.selected{
+	font-weight: bold;
+}
+
+nav a:hover{
+	text-decoration: none;
+	background-color: dodgerblue;
+	color: white;
+}
+
+#CSSSelectArea{
+	padding: 1rem;
+	background-color: #eee;
+	position: absolute;
+	right: 0;
+	top: 0;
+	border-radius: 0 0 0 1rem;
+}
+
+#CSSSelect{
+	padding: 0.5rem;
+}
+
+.scrollOverflow::after{
+	color: dodgerblue;
+}
+
+#sizeCalc{
+			padding: 2px;
+		}
+		
+input{
+	margin: 5px 0;
+}
+
+button{
+	margin: 5px 0;
+	padding: 5px;
+	border: 2px solid dodgerblue;
+	color: dodgerblue;
+	background-color: white;
+	border-radius: 10px;
+}
+
+button:hover{
+	background-color: dodgerblue;
+	color: white;
+}
+
+#stopDrawingBtn{
+	border: 2px solid red;
+	color: red;
+}
+
+#stopDrawingBtn:hover{
+	color: white;
+	background-color: red;
+}
+
+.area{
+	margin-top: 30px;
+	margin-bottom: 60px;
+}
+
+.secBlock{
+	margin-bottom: 10px;
+	padding: 10px;
+	background-color: #f4f4f4;
+	border: 1px solid dodgerblue;
+	border-radius: 5px;
+}
+
+.secBlock:first-child{
+	border-top-left-radius: 15px;
+	border-top-right-radius: 15px;
+}
+
+
+.secBlock:last-child{
+	border-bottom-left-radius: 15px;
+	border-bottom-right-radius: 15px;
+}
+
+.secBlock h3 a:hover{
+	color: deepskyblue;
+}
