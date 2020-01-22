@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en-nz">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta charset="UTF-8">
+	<title>Parser</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<script src="scripts/ast.js"></script>
+	<script src="scripts/lexer.js"></script>
+	<script src="scripts/parser.js"></script>
+	<script>
+	
+	function parse(){
+		//const tokens = beginLex(document.getElementById('parseInput').value);
+		const node = parser(document.getElementById('parseInput').value);
+		const output = document.getElementById('parseOutput');
+		output.innerHTML = '';
+		output.innerText = JSON.stringify(node);
+	}
+	
+	window.addEventListener('DOMContentLoaded', () => {
+		if(document.getElementById('parseInput').value){
+			parse();
+		}
+	
+		document.getElementById('parseInput').addEventListener('input', parse);
+	});
+	
+	</script>
+</head>
+<body>
+<div class="navHolder">
+	<nav>
+		<a class="selected" href="index.html">Home</a>
+		<a class="selected" href="lexerTest.html">Lexer</a>
+		<a class="selected" href="parserTest.html">Parser</a>
+	</nav>
+</div>
+<main>
+	<div class="pageWidth">
+		<header>
+			<h1>Parser</h1>
+		</header>
+		<section>
+			<input id="parseInput" type="text">
+			<p id="parseOutput"></p>
+		</section>
+		<div class="scrollOverflow"></div>
+	</div>
+</main>
+</body>
+</html>

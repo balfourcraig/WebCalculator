@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en-nz">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta charset="UTF-8">
+	<title>Lexer</title>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<script src="scripts/lexer.js"></script>
+	<script>
+	
+	function lex(){
+		const tokens = beginLex(document.getElementById('lexInput').value);
+		const output = document.getElementById('lexOutput');
+		output.innerHTML = '';
+		const list = document.createElement('ul');
+		for(let i = 0; i < tokens.length; i++){
+			const line = document.createElement('li');
+			line.innerText = tokens[i].type + (tokens[i].value === null ? '' : ' : ' + tokens[i].value);
+			list.appendChild(line);
+		}
+		output.appendChild(list);
+	}
+	
+	window.addEventListener('DOMContentLoaded', () => {
+		if(document.getElementById('lexInput').value){
+			lex();
+		}
+	
+		document.getElementById('lexInput').addEventListener('input', lex);
+	});
+	
+	</script>
+</head>
+<body>
+<div class="navHolder">
+	<nav>
+		<a class="selected" href="index.html">Home</a>
+		<a class="selected" href="lexerTest.html">Lexer</a>
+	</nav>
+</div>
+<main>
+	<div class="pageWidth">
+		<header>
+			<h1>Lexer</h1>
+		</header>
+		<section>
+			<p>Test the lexer here. Tokens will be printed below, but nothing will be done with them</p>
+			<input id="lexInput" type="text">
+			<p id="lexOutput"></p>
+		</section>
+		<div class="scrollOverflow"></div>
+	</div>
+</main>
+</body>
+</html>
