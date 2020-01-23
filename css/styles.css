@@ -115,6 +115,7 @@ button{
 	color: dodgerblue;
 	background-color: white;
 	border-radius: 10px;
+	cursor: pointer;
 }
 
 button:hover{
@@ -171,4 +172,34 @@ select{
 td{
 	padding: 10px 0;
 	border-top: 1px solid dodgerblue;
+}
+
+.calcHolder{
+	display: flex;
+}
+
+#calcBtn {
+ position: relative;
+ width: 50px;
+}
+
+#calcBtn:after, #calcBtn:before{
+  content: '';
+  width: 35px;
+  height: 5px;
+  background-color: dodgerblue;
+  position: absolute;
+  left: 5px;
+}
+
+#calcBtn:hover:after, #calcBtn:hover:before{
+	background-color: white;
+}
+
+#calcBtn:before {
+  bottom: 55%;
+}
+
+#calcBtn:after {
+  bottom: 35%;
 }

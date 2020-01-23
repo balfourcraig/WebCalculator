@@ -68,8 +68,9 @@
 			calc();
 		}
 	
-		document.getElementById('calcInput').addEventListener('input', calc);
+		//document.getElementById('calcInput').addEventListener('input', calc);
 		document.getElementById('numFormatSelect').addEventListener('change',calc);
+		document.getElementById('calcBtn').addEventListener('click',calc);
 	});
 	
 	</script>
@@ -96,7 +97,10 @@
 			</select><span id="formatWarning" class="error"></span>
 			<br>
 			<p id="calcOutput">&nbsp;</p>
-			<input id="calcInput" type="text" placeholder="Equation...">
+			<div class="calcHolder">
+				<input id="calcInput" type="text" placeholder="Equation...">
+				<button id="calcBtn" title="Equals"></button>
+			</div>
 			<ul id="calcErrors" class="error"></ul>
 			<hr>
 			<h2>Functions</h2>
