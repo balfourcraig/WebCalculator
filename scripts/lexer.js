@@ -242,6 +242,8 @@ function getOneGram(gram){
 			return 'SUB';
 		case '*':
 			return 'MUL';
+		case 'X':
+			return 'MUL';
 		case '/':
 			return 'DIV';
 		case '%':
