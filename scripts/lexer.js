@@ -39,6 +39,9 @@ function beginLex(line){
 			result += currentChar;
 			advance();
 		}
+		if(result === ''){
+			return null;
+		}
 		
 		const keyword = getKeyword(result);
 		if(keyword === null){
@@ -47,6 +50,30 @@ function beginLex(line){
 		else{
 			return token(keyword, null);
 		}
+	}
+	
+	function hexNum(){
+		let result = '';
+		advance();// 0
+		advance();// x
+		while (currentChar != null && isHexDigit(currentChar) || currentChar == '_'){
+			if(currentChar != '_')
+				result += currentChar;
+			advance();
+		}
+		return token('HEXNUM', result);
+	}
+	
+	function binNum(){
+		let result = '';
+		advance();// 0
+		advance();// b
+		while (currentChar == '0' || currentChar == '1' || currentChar == '_'){
+			if(currentChar != '_')
+				result += currentChar;
+			advance();
+		}
+		return token('BINNUM', result);
 	}
 	
 	function num(){
@@ -100,11 +127,21 @@ function beginLex(line){
 	function getToken(){
 		skipWhitespace();
 		if(currentChar != null){
-			if(isDigit(currentChar)){
+			const peeked = peek();
+			
+			if(currentChar === '0' && peeked != null && peeked == 'x'){
+				return hexNum();
+			}
+			
+			if(currentChar === '0' && peeked != null && peeked == 'b'){
+				return binNum();
+			}
+			
+			if(isDigit(currentChar) || currentChar === '.'){
 				return num();
 			}
 			
-			const peeked = peek();
+			
 			if(peeked !== null){
 				const bigramSymbol = currentChar + '' + peeked;
 				const bigram = getBiGram(bigramSymbol);
@@ -120,8 +157,9 @@ function beginLex(line){
 				advance();
 				return token(oneGram, null);
 			}
-			
-			return id();
+			const asID = id();
+			if(asID)
+				return asID;
 		}
 		return token('EOF', null);
 	}
@@ -140,6 +178,10 @@ function token(type, value){
 
 function isDigit(c){
 	return c >= '0' && c <= '9';
+}
+
+function isHexDigit(c){
+	return c >= '0' && c <= '9' || (c >= 'a' && c <= 'F') || (c >= 'A' && c <= 'F');
 }
 
 function isLetter(c){
@@ -214,6 +256,8 @@ function getOneGram(gram){
 			return 'OR';
 		case '&':
 			return 'AND';
+		case ',':
+			return 'COMMA';
 	}
 	return null;
 }

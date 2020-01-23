@@ -3,15 +3,83 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta charset="UTF-8">
-	<title>Web Calculator</title>
+	<title>Calculator</title>
+	<link rel="stylesheet" href="css/typeStyles.css">
 	<link rel="stylesheet" href="css/styles.css">
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<script src="scripts/calcTypes.js"></script>
+	<script src="scripts/ast.js"></script>
+	<script src="scripts/lexer.js"></script>
+	<script src="scripts/parser.js"></script>
+	<script src="scripts/builder.js"></script>
+	<script>
+	
+	function calc(){
+		const numFormat = document.getElementById('numFormatSelect').value;
+		const formatWarning = document.getElementById('formatWarning');
+		if(numFormat === 'bin')
+			formatWarning.innerText = ' WARNING: Binary mode is a bit odd with fractinal values';
+		else if(numFormat === 'hex')
+			formatWarning.innerText = ' WARNING: Hex mode is a bit odd with fractinal values';
+		else
+			formatWarning.innerText = '';
+	
+	
+		const output = document.getElementById('calcOutput');
+		output.innerHTML = '&nbsp;';
+		output.removeAttribute('class');
+		const input = document.getElementById('calcInput').value;
+		const errorList = document.getElementById('calcErrors');
+		errorList.innerHTML = '';
+		
+		if(input){
+			const result = calculator(input);
+			output.setAttribute('class', result.type.toLowerCase());
+			
+			if(result.type == 'ERROR'){
+				output.innerText = 'Error';
+				for(let i = 0; i < result.value.length; i++){
+					const li = document.createElement('li');
+					li.setAttribute('class', result.type.toLowerCase());
+					li.innerText = result.value[i];
+					errorList.appendChild(li);
+				}
+			}
+			else{
+				if(result.type === 'NUM'){
+					
+					if(numFormat == 'dec'){
+						output.innerText = result.value.toString();
+					}
+					else if (numFormat == 'bin')
+						output.innerText = '0b_' + result.value.toString(2);
+					else if (numFormat == 'hex')
+						output.innerText = '0x_' + result.value.toString(16).toUpperCase();
+				}
+				else{
+					output.innerText = result.value.toString();
+				}
+			}
+		}
+	}
+	
+	window.addEventListener('DOMContentLoaded', () => {
+		if(document.getElementById('calcInput').value){
+			calc();
+		}
+	
+		document.getElementById('calcInput').addEventListener('input', calc);
+		document.getElementById('numFormatSelect').addEventListener('change',calc);
+	});
+	
+	</script>
 </head>
 <body>
 <div class="navHolder">
 	<nav>
-		<a class="selected" href="index.html">Home</a>
-		<a class="selected" href="lexerTest.html">Lexer</a>
+		<a class="selected" href="index.html">Calculator</a>
+		<a href="lexerTest.html">Lexer</a>
+		<a href="parserTest.html">Parser</a>
 	</nav>
 </div>
 <main>
@@ -20,7 +88,172 @@
 			<h1>Calculator</h1>
 		</header>
 		<section>
-			<p>Calculator</p>
+			<label for="numFormatSelect">Number display format: </label>
+			<select id="numFormatSelect">
+				<option selected value="dec">Decimal</option>
+				<option value="bin">Binary</option>
+				<option value="hex">Hex</option>
+			</select><span id="formatWarning" class="error"></span>
+			<br>
+			<p id="calcOutput">&nbsp;</p>
+			<input id="calcInput" type="text" placeholder="Equation...">
+			<ul id="calcErrors" class="error"></ul>
+			<hr>
+			<h2>Functions</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Parameters</th>
+						<th>Returns</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>IsNaN</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Tests if number is not a number value</td>
+					</tr>
+					<tr>
+						<td>Sqrt</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Square root</td>
+					</tr>
+					<tr>
+						<td>Ln</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Natural logarithm</td>
+					</tr>
+					<tr>
+						<td>Sin</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Sin of angle in radians</td>
+					</tr>
+					<tr>
+						<td>Cos</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Cos of angle in radians</td>
+					</tr>
+					<tr>
+						<td>Tan</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Tan of angle in radians</td>
+					</tr>
+					<tr>
+						<td>Floor</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Rounds down to nearest whole integer</td>
+					</tr>
+					<tr>
+						<td>Ceiling</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Rounds up to nearest whole integer</td>
+					</tr>
+					<tr>
+						<td>Max</td>
+						<td><span class="num">Number</span>, <span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Largest of two numbers</td>
+					</tr>
+					<tr>
+						<td>Min</td>
+						<td><span class="num">Number</span>, <span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Smallest of two numbers</td>
+					</tr>
+					<tr>
+						<td>Log</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Log base 10</td>
+					</tr>
+					<tr>
+						<td>Sum</td>
+						<td><span class="num">Number</span>(List of)</td>
+						<td><span class="num">Number</span></td>
+						<td>Sums all parameters</td>
+					</tr>
+				</tbody>
+			</table>
+			<hr>
+			<h2>Values</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>True</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
+					</tr>
+					<tr>
+						<td>False</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
+					</tr>
+					<tr>
+						<td>Infinity</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point infinity</td>
+					</tr>
+					<tr>
+						<td>NegativeInfinity</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point -infinity</td>
+					</tr>
+					<tr>
+						<td>Pi</td>
+						<td><span class="num">Number</span></td>
+						<td>Approximation of PI</td>
+					</tr>
+					<tr>
+						<td>e</td>
+						<td><span class="num">Number</span></td>
+						<td>Approximation of e (Euler's number)</td>
+					</tr>
+					<tr>
+						<td>Phi</td>
+						<td><span class="num">Number</span></td>
+						<td>Approximation of Phi (the golden ratio)</td>
+					</tr>
+					<tr>
+						<td>g</td>
+						<td><span class="num">Number</span></td>
+						<td>Gravitational acceleration on Earth</td>
+					</tr>
+					<tr>
+						<td>g</td>
+						<td><span class="num">Number</span></td>
+						<td>Speed of light in a vacuum in meters/second</td>
+					</tr>
+					<tr>
+						<td>Random</td>
+						<td><span class="num">Number</span></td>
+						<td>Random number between 0 and 1. Different every time it's used</td>
+					</tr>
+				</tbody>
+			</table>
+			<hr>
+			<h2>Number formats</h2>
+			<p>Numbers are assumed to be base 10. If you want to input a binary number, prefix it with 0b or 0x for a hexidecimal number. They will be converted to decimal prior to any calculations.</p>
+			<p>Output is displayed as decimal by default, but you can use the select at the top of the page to change that to binary or hex.</p>
+			<p>Hex and binary inputs may not contain decimal points, though decimal may. Hex and binary output format will use decimal points where required</p>
+			<p>Hex and binary numbers may both contain as many _ as you need. So 0b10011101 is exactly the same as 0b_1001_1101</p>
+			<p>Scientific notation is partially supported, within the limits of IEEE double precision floating point numbers.</p>
 		</section>
 		<div class="scrollOverflow"></div>
 	</div>

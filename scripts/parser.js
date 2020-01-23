@@ -1,10 +1,16 @@
+let parseErrors = [];
+
 function parser(line){
 	let tokenIndex = 0;
 	const tokens = beginLex(line);
 	let currentToken = tokens.length > 0 ? tokens[tokenIndex] : null;
-	const errors = [];
+	parseErrors = [];
 	
-	return level_4();
+	const root = level_9();
+	if(tokenIndex < tokens.length -1){
+		parseErrors.push('Multiple statements detected.');
+	}
+	return root;
 	
 	function eat(type){
 		if(currentToken.type === type){
@@ -12,7 +18,7 @@ function parser(line){
 			currentToken = tokens[tokenIndex];
 		}
 		else{
-			errors.push('Expected ' + type + ' but saw ' + currentToken.type);
+			parseErrors.push('Expected ' + type + ' but saw ' + currentToken.type);
 		}
 	}
 	
@@ -34,16 +40,24 @@ function parser(line){
 			eat('NUM');
 			return numLit(token);
 		}
+		else if(token.type === 'HEXNUM'){
+			eat('HEXNUM');
+			return numLitHEX(token);
+		}
+		else if(token.type === 'BINNUM'){
+			eat('BINNUM');
+			return numLitBIN(token);
+		}
 		else if (token.type === 'LPAREN'){
-			Eat('LPAREN');
-			const node = level_4();//Should be about level_10
-			Eat('RPAREN');
+			eat('LPAREN');
+			const node = level_9();
+			eat('RPAREN');
 			return node;
 		}
 		else if(token.type === 'ID'){
 			return functionOrVariable();
 		}
-		errors.push('Unexpected token ' + token.type);
+		parseErrors.push('Unexpected token ' + token.type);
 		return noOp();
 	}
 	
@@ -88,7 +102,73 @@ function parser(line){
 		return node;
 	}
 	
+	function level_5(){
+		let node = level_4();
+		while(currentToken.type === 'GREATER' || currentToken.type === 'GREATEREQ' ||currentToken.type === 'LESS' ||currentToken.type === 'LESSEQ'){
+			const token = currentToken;
+			eat(token.type);
+			node = binOp(node, level_4(), token);
+		}
+		return node;
+	}
+	
+	function level_6(){
+		let node = level_5();
+		while(currentToken.type === 'EQ' || currentToken.type === 'NOTEQ'){
+			const token = currentToken;
+			eat(token.type);
+			
+			node = binOp(node, level_5(), token);
+		}
+		return node;
+	}
+	
+	function level_7(){
+		let node = level_6();
+		while (currentToken.type === 'AND'){
+			const token = currentToken;
+			eat(token.type);
+			node = binOp(node, level_6(), token);
+		}
+		return node;
+	}
+	
+	function level_8(){
+		let node = level_7();
+		while (currentToken.type === 'XOR'){
+			const token = currentToken;
+			eat(token.type);
+			node = binOp(node, level_7(), token);
+		}
+		return node;
+	}
+	
+	function level_9(){
+		let node = level_8();
+		while (currentToken.type === 'OR'){
+			const token = currentToken;
+			eat(token.type);
+			node = binOp(node, level_8(), token);
+		}
+		return node;
+	}
+	
 	function functionOrVariable(){
-		alert('oh no!');//This is really great error handling...
+		const token = currentToken;
+		eat('ID');
+		if(currentToken.type == 'LPAREN'){
+			eat('LPAREN');
+			const paramList = [];
+			if(currentToken.type !== 'RPAREN'){
+				paramList.push(level_9());
+				while(currentToken.type === 'COMMA'){
+					eat('COMMA');
+					paramList.push(level_9());
+				}
+			}
+			eat('RPAREN');
+			return func(token, paramList);
+		}
+		return variable(token);
 	}
 }

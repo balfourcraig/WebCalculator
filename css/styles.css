@@ -159,3 +159,16 @@ button:hover{
 .secBlock h3 a:hover{
 	color: deepskyblue;
 }
+
+table{
+	width: 100%;
+}
+
+select{
+	padding: 0.5em;
+}
+
+td{
+	padding: 10px 0;
+	border-top: 1px solid dodgerblue;
+}
