@@ -1,14 +1,27 @@
 .num{
 	color: green;
-	font-weight: bold;
 }
 
 .error{
 	color: red;
 }
 
+.warning{
+	color: #cc8f00;
+}
+
 .bool{
 	color: #64a8ff;
+}
+
+.complex{
+	color: fuchsia;
+}
+
+.legend li{
+	padding: 0.5em;
+	margin-bottom: 0.5em;
+	border: 1px solid;
 }
 
 #calcInput {
@@ -38,5 +51,9 @@
 }
 
 #calcOutput.bool{
+	border: 2px solid #45ff45;
+}
+
+#calcOutput.complex{
 	border: 2px solid #45ff45;
 }

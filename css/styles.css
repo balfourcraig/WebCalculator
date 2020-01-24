@@ -203,3 +203,8 @@ td{
 #calcBtn:after {
   bottom: 35%;
 }
+
+.smallSpacer{
+	width: 100%;
+	height: 150px;
+}

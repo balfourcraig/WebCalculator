@@ -18,9 +18,9 @@
 		const numFormat = document.getElementById('numFormatSelect').value;
 		const formatWarning = document.getElementById('formatWarning');
 		if(numFormat === 'bin')
-			formatWarning.innerText = ' WARNING: Binary mode is a bit odd with fractinal values';
+			formatWarning.innerText = ' WARNING: Binary mode is a bit odd with fractinal values, and doesn\'t work with complex';
 		else if(numFormat === 'hex')
-			formatWarning.innerText = ' WARNING: Hex mode is a bit odd with fractinal values';
+			formatWarning.innerText = ' WARNING: Hex mode is a bit odd with fractinal values, and doesn\'t work with complex';
 		else
 			formatWarning.innerText = '';
 	
@@ -37,42 +37,99 @@
 			output.setAttribute('class', result.type.toLowerCase());
 			
 			if(result.type == 'ERROR'){
-				output.innerText = 'Error';
+				output.innerText = 'Invalid or incomplete equation';
 				for(let i = 0; i < result.value.length; i++){
 					const li = document.createElement('li');
 					li.setAttribute('class', result.type.toLowerCase());
-					li.innerText = result.value[i];
+					li.innerText = 'ERROR: ' + result.value[i];
 					errorList.appendChild(li);
 				}
 			}
 			else{
 				if(result.type === 'NUM'){
-					
 					if(numFormat == 'dec'){
 						output.innerText = result.value.toString();
 					}
-					else if (numFormat == 'bin')
-						output.innerText = '0b_' + result.value.toString(2);
-					else if (numFormat == 'hex')
-						output.innerText = '0x_' + result.value.toString(16).toUpperCase();
+					else{
+						let compressed;
+						let formatted;
+						
+						if (numFormat == 'bin'){
+							compressed = result.value.toString(2);
+							formatted = '0b_';
+						}
+						else{
+							compressed = result.value.toString(16).toUpperCase();
+							formatted = '0x_';
+						}
+						if(isNaN(result.value)){
+							output.innerText = formatted + compressed;
+						}
+						
+						else{
+							for(let i = compressed.length; i % 4 != 0; i++){
+								formatted += '0';
+							}
+							for(let i = 0; i < compressed.length; i++){
+								if(i > 0 && (i + (4 - compressed.length) % 4) % 4 === 0){
+									formatted += '_';
+								}
+								formatted += compressed[i];
+							}
+							output.innerText = formatted;
+						}
+						
+					}
+				}
+				else if (result.type === 'COMPLEX'){
+					let formatted = '';
+					if(result.real != 0){
+						formatted += result.real;
+						if(result.imaginary >= 0)
+							formatted += ' + ';
+						else
+							formatted += ' - ';
+					}
+					else if (result.imaginary < 0)
+						formatted += '-';
+						
+					
+					if(result.imaginary !== 1 && result.imaginary !== -1)
+						formatted += Math.abs(result.imaginary);
+					formatted += 'i';
+						
+					output.innerText = formatted;
+				}
+				else if (result.type === 'VOID'){
+					output.innerHTML = '&nbsp;';
 				}
 				else{
 					output.innerText = result.value.toString();
 				}
 			}
+			
+			for(let i = 0; i < parseWarnings.length; i++){
+				const li = document.createElement('li');
+				li.setAttribute('class', 'warning');
+				li.innerText = 'WARNING: ' + parseWarnings[i];
+				errorList.appendChild(li);
+			}
+			for(let i = 0; i < lexErrors.length; i++){
+				const li = document.createElement('li');
+				li.setAttribute('class', 'warning');
+				li.innerText = 'WARNING: ' + lexErrors[i];
+				errorList.appendChild(li);
+			}
 		}
 	}
 	
 	window.addEventListener('DOMContentLoaded', () => {
-		if(document.getElementById('calcInput').value){
-			calc();
-		}
-	
+		calc();
+		
 		document.getElementById('calcInput').addEventListener('input', calc);
 		document.getElementById('numFormatSelect').addEventListener('change',calc);
-		document.getElementById('calcBtn').addEventListener('click',calc);
+		//document.getElementById('calcBtn').addEventListener('click',calc);
 	});
-	
 	</script>
 </head>
 <body>
@@ -94,14 +151,28 @@
 				<option selected value="dec">Decimal</option>
 				<option value="bin">Binary</option>
 				<option value="hex">Hex</option>
-			</select><span id="formatWarning" class="error"></span>
+			</select><span id="formatWarning" class="warning"></span>
 			<br>
+			<div class="smallSpacer"></div>
 			<p id="calcOutput">&nbsp;</p>
 			<div class="calcHolder">
 				<input id="calcInput" type="text" placeholder="Equation...">
-				<button id="calcBtn" title="Equals"></button>
+				<!--<button id="calcBtn" title="Equals"></button>-->
 			</div>
 			<ul id="calcErrors" class="error"></ul>
+			<div class="smallSpacer"></div>
+			
+			<h2>Color Legend</h2>
+			<ul class="legend">
+				<li class="num">Number: Real numbers including integers and decimals, as well as special values like NaN, Infinity, and NegativeInfinity</li>
+				<li class="bool">Boolean: True/False only</li>
+				<li class="complex">Complex: Numbers consisting of a real component and an imaginary component (denoted by i)</li>
+				<li class="error">Error: Issues causing the calculator to malfunction</li>
+				<li class="warning">Warning: Issues which may cause unexpected results, but the calculator will attempt to continue through</li>
+			</ul>
+			<hr>
+			
+			<p>Functions and values are not case sensitive</p>
 			<hr>
 			<h2>Functions</h2>
 			<table>
@@ -115,40 +186,40 @@
 				</thead>
 				<tbody>
 					<tr>
-						<td>IsNaN</td>
+						<td>Abs</td>
 						<td><span class="num">Number</span></td>
-						<td><span class="bool">Boolean</span></td>
-						<td>Tests if number is not a number value</td>
+						<td><span class="num">Number</span></td>
+						<td>Takes the absolute value or magnitude</td>
 					</tr>
 					<tr>
-						<td>Sqrt</td>
+						<td>aCos</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Square root</td>
+						<td>Arc-Cosine</td>
 					</tr>
 					<tr>
-						<td>Ln</td>
+						<td>aSin</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Natural logarithm</td>
+						<td>Arc-Sine</td>
 					</tr>
 					<tr>
-						<td>Sin</td>
+						<td>aTan</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Sin of angle in radians</td>
+						<td>Arc-Tangent</td>
+					</tr>
+					<tr>
+						<td>Ceiling</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Rounds up to nearest whole integer</td>
 					</tr>
 					<tr>
 						<td>Cos</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Cos of angle in radians</td>
-					</tr>
-					<tr>
-						<td>Tan</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
-						<td>Tan of angle in radians</td>
+						<td>Cosine of angle in radians</td>
 					</tr>
 					<tr>
 						<td>Floor</td>
@@ -157,10 +228,34 @@
 						<td>Rounds down to nearest whole integer</td>
 					</tr>
 					<tr>
-						<td>Ceiling</td>
+						<td>IsEven</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Tests if number is even</td>
+					</tr>
+					<tr>
+						<td>IsNaN</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Tests if number is NaN(not a number) value</td>
+					</tr>
+					<tr>
+						<td>IsOdd</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Tests if number is odd</td>
+					</tr>
+					<tr>
+						<td>Ln</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Rounds up to nearest whole integer</td>
+						<td>Natural logarithm</td>
+					</tr>
+					<tr>
+						<td>Log</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Log base 10</td>
 					</tr>
 					<tr>
 						<td>Max</td>
@@ -175,16 +270,40 @@
 						<td>Smallest of two numbers</td>
 					</tr>
 					<tr>
-						<td>Log</td>
+						<td>Random</td>
+						<td><span class="num">MinNumber</span>, <span class="num">MaxNumber</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Random number between min(inclusive) and max(exclusive)</td>
+					</tr>
+					<tr>
+						<td>Round</td>
+						<td><span class="num">Number</span>, <span class="num">Number</span>(OPTIONAL)</td>
+						<td><span class="num">Number</span></td>
+						<td>Rounds the given number to the specified precision, or the nearest integer if no second value is provided</td>
+					</tr>
+					<tr>
+						<td>Sin</td>
 						<td><span class="num">Number</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Log base 10</td>
+						<td>Sine of angle in radians</td>
+					</tr>
+					<tr>
+						<td>Sqrt</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span>/<span class="complex">Complex</span></td>
+						<td>Principle square root (returns complex when argument is negative)</td>
 					</tr>
 					<tr>
 						<td>Sum</td>
-						<td><span class="num">Number</span>(List of)</td>
+						<td><span class="num">Numbers[ ]</span></td>
 						<td><span class="num">Number</span></td>
-						<td>Sums all parameters</td>
+						<td>Sums all comma separated parameters</td>
+					</tr>
+					<tr>
+						<td>Tan</td>
+						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span></td>
+						<td>Tangent of angle in radians</td>
 					</tr>
 				</tbody>
 			</table>
@@ -200,29 +319,9 @@
 				</thead>
 				<tbody>
 					<tr>
-						<td>True</td>
-						<td><span class="bool">Boolean</span></td>
-						<td>Boolean literal</td>
-					</tr>
-					<tr>
-						<td>False</td>
-						<td><span class="bool">Boolean</span></td>
-						<td>Boolean literal</td>
-					</tr>
-					<tr>
-						<td>Infinity</td>
+						<td>c</td>
 						<td><span class="num">Number</span></td>
-						<td>IEEE floating point infinity</td>
-					</tr>
-					<tr>
-						<td>NegativeInfinity</td>
-						<td><span class="num">Number</span></td>
-						<td>IEEE floating point -infinity</td>
-					</tr>
-					<tr>
-						<td>Pi</td>
-						<td><span class="num">Number</span></td>
-						<td>Approximation of PI</td>
+						<td>Speed of light in a vacuum in meters/second</td>
 					</tr>
 					<tr>
 						<td>e</td>
@@ -230,9 +329,9 @@
 						<td>Approximation of e (Euler's number)</td>
 					</tr>
 					<tr>
-						<td>Phi</td>
-						<td><span class="num">Number</span></td>
-						<td>Approximation of Phi (the golden ratio)</td>
+						<td>False</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
 					</tr>
 					<tr>
 						<td>g</td>
@@ -240,20 +339,51 @@
 						<td>Gravitational acceleration on Earth</td>
 					</tr>
 					<tr>
-						<td>g</td>
+						<td>i</td>
+						<td><span class="complex">Complex</span></td>
+						<td>The imaginary unit</td>
+					</tr>
+					<tr>
+						<td>Infinity</td>
 						<td><span class="num">Number</span></td>
-						<td>Speed of light in a vacuum in meters/second</td>
+						<td>IEEE floating point infinity</td>
+					</tr>
+					<tr>
+						<td>NaN</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point NaN (Not A Number) value. Note that NaN != NaN</td>
+					</tr>
+					<tr>
+						<td>NegativeInfinity</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point -infinity</td>
+					</tr>
+					<tr>
+						<td>Phi</td>
+						<td><span class="num">Number</span></td>
+						<td>Approximation of Phi (the golden ratio)</td>
+					</tr>
+					<tr>
+						<td>Pi</td>
+						<td><span class="num">Number</span></td>
+						<td>Approximation of PI</td>
 					</tr>
 					<tr>
 						<td>Random</td>
 						<td><span class="num">Number</span></td>
 						<td>Random number between 0 and 1. Different every time it's used</td>
 					</tr>
+					<tr>
+						<td>True</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
+					</tr>
 				</tbody>
 			</table>
 			<hr>
 			<h2>Number formats</h2>
 			<p>Numbers are assumed to be base 10. If you want to input a binary number, prefix it with 0b or 0x for a hexidecimal number. They will be converted to decimal prior to any calculations.</p>
+			<p>Complex numbers are limited in both input and output to be base 10 for the imaginary component. If you really want an imaginary hex number for example, you could write something like "0x_AA * i"</p>
 			<p>Output is displayed as decimal by default, but you can use the select at the top of the page to change that to binary or hex.</p>
 			<p>Hex and binary inputs may not contain decimal points, though decimal may. Hex and binary output format will use decimal points where required</p>
 			<p>Hex and binary numbers may both contain as many _ as you need. So 0b10011101 is exactly the same as 0b_1001_1101</p>

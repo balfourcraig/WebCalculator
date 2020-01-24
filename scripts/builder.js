@@ -1,13 +1,22 @@
 function calculator(line){
 	const buildErrors = [];
 	const root = parser(line);
+	//if(lexErrors && lexErrors.length > 0){
+		//return calcError(lexErrors);
+	//}
 	if(parseErrors && parseErrors.length > 0){
 		return calcError(parseErrors);
 	}
 	const result = visit(root);
+	if(result === null){
+		buildErrors.push('Could not calculate a meaningful result');
+	}
 	if(buildErrors && buildErrors.length > 0){
 		return calcError(buildErrors);
 	}
+	if(result.type === 'COMPLEX' && result.imaginary === 0)
+		return calcNum(result.real);
+	
 	return result;
 	
 	function visit(node){
@@ -22,27 +31,43 @@ function calculator(line){
 				return visit_Variable(node);
 			case 'Function':
 				return visit_Function(node);
+			case 'ComplexComponent':
+				return visit_ComplexComponent(node);
+			case 'NoOp':
+				return calcVoid();
 		}
 		buildErrors.push('Failed to build node ' + node.name);
 		return calcError(buildErrors);
 	}
 	
+	function visit_ComplexComponent(node){
+		return calcComplex(0, node.value);
+	}
+	
 	function visit_Function(node){
 		switch(node.value.toUpperCase()){
 			case 'SQRT':
-				return oneParamNumFunc(node, Math.sqrt);
+				return sqrtComplex(node);
 			case 'LN':
 				return oneParamNumFunc(node, Math.log);
+			case 'ABS':
+				return absComplex(node);
 			case 'SIN':
 				return oneParamNumFunc(node, Math.sin);
 			case 'COS':
 				return oneParamNumFunc(node, Math.cos);
 			case 'TAN':
 				return oneParamNumFunc(node, Math.tan);
+			case 'ASIN':
+				return oneParamNumFunc(node, Math.asin);
+			case 'ACOS':
+				return oneParamNumFunc(node, Math.acos);
+			case 'ATAN':
+				return oneParamNumFunc(node, Math.atan);
 			case 'FLOOR':
 				return oneParamNumFunc(node, Math.floor);
 			case 'CEILING':
-				return oneParamNumFunc(node, Math.ceiling);
+				return oneParamNumFunc(node, Math.ceil);
 			case 'MAX':
 				return twoParamNumFunc(node, Math.max);
 			case 'MIN':
@@ -52,10 +77,18 @@ function calculator(line){
 			case 'SUM':
 				return sum(node);
 			case 'ISNAN':
-				return oneParamNumFunc(node, isNaN);
+				return oneParamNumFuncBool(node, isNaN, false);
+			case 'RANDOM':
+				return twoParamNumFunc(node, randomRange);
+			case 'ROUND':
+				return round(node);
+			case 'ISEVEN':
+				return oneParamNumFuncBool(node, (x) => x % 2 == 0, false);
+			case 'ISODD':
+				return oneParamNumFuncBool(node, (x) => x % 2 == 1, false);
 		}
-		buildErrors.push('Unknown function: ' + node.value);
-		return null;
+		parseWarnings.push('Unknown function: ' + node.value);
+		return calcVoid();
 	}
 	
 	function visit_Variable(node){
@@ -81,8 +114,8 @@ function calculator(line){
 			case 'RANDOM':
 				return calcNum(Math.random());
 		}
-		buildErrors.push('Unknown variable: ' + node.value);
-		return null;
+		parseWarnings.push('Unknown variable: ' + node.value);
+		return calcVoid();
 	}
 	
 	function visit_NumLit(node){
@@ -97,6 +130,9 @@ function calculator(line){
 			const val = visit(node.value);
 			if(val.type === 'NUM'){
 				return calcNum(-1 * val.value);
+			}
+			else if (val.type === 'COMPLEX'){
+				return calcComplex(val.real * -1, -1 * val.imaginary);
 			}
 			else{
 				buildErrors.push('Unary negative only works on numbers');
@@ -130,9 +166,8 @@ function calculator(line){
 					return calcBool(false);
 				else{
 					const rhs = visit(node.right);
-					if(rhs === null){
-						buildErrors.push('RHS was null');
-						return null;
+					if(rhs === null || rhs.type === 'VOID'){
+						return lhs;
 					}
 					if(rhs.type === 'BOOL'){
 						if(node.op === 'AND')
@@ -148,9 +183,8 @@ function calculator(line){
 			}
 			else if(lhs.type === 'NUM'){
 				const rhs = visit(node.right);
-				if(rhs === null){
-					buildErrors.push('RHS was null');
-					return null;
+				if(rhs === null || rhs.type === 'VOID'){
+					return lhs;
 				}
 				if(rhs.type === 'NUM'){
 					if(node.op === 'AND'){
@@ -170,9 +204,38 @@ function calculator(line){
 		}
 		else{
 			const rhs = visit(node.right);
-			if(rhs === null){
-				buildErrors.push('RHS was null');
-				return null;
+			if(rhs === null || rhs.type === 'VOID'){
+				return lhs;
+			}
+			
+			if(lhs.type === 'COMPLEX' || rhs.type === 'COMPLEX'){
+				const li = promoteNumToComplex(lhs);
+				const ri = promoteNumToComplex(rhs);
+				
+				if(node.op === 'ADD')
+					return calcComplex(li.real + ri.real, li.imaginary + ri.imaginary);
+				else if (node.op === 'SUB')
+					return calcComplex(li.real - ri.real, li.imaginary - ri.imaginary);
+				else if (node.op === 'MUL')
+					return complexMul(li,ri);
+				else if(node.op === 'DIV'){
+					if(!ri.real && !ri.imaginary){
+						parseWarnings.push('Divide by 0 is undefined');
+						return calcNum(NaN);
+					}
+					const conjugate = calcComplex(ri.real, -ri.imaginary);
+					const numerator = complexMul(li, conjugate);
+					const denomenator = complexMul(ri, conjugate).real;
+					return calcComplex(numerator.real / denomenator, numerator.imaginary / denomenator);
+				}
+				else if(node.op === 'POW' && rhs.type === 'NUM'){
+					let powRes = calcComplex(1,0);
+					for(let i = 0; i < rhs.value; i++){
+						console.log(powRes);
+						powRes = complexMul(li, powRes);
+					}
+					return powRes;
+				}
 			}
 			if(lhs.type === 'NUM' && rhs.type === 'NUM'){
 				if(node.op === 'ADD')
@@ -181,8 +244,14 @@ function calculator(line){
 					return calcNum(lhs.value - rhs.value);
 				else if(node.op === 'MUL')
 					return calcNum(lhs.value * rhs.value);
-				else if(node.op === 'DIV')
-					return calcNum(lhs.value / rhs.value);
+				else if(node.op === 'DIV'){
+					if(rhs.value)
+						return calcNum(lhs.value / rhs.value);
+					else{
+						parseWarnings.push('Divide by 0 is undefined');
+						return calcNum(NaN);
+					}
+				}
 				else if(node.op === 'POW')
 					return calcNum(Math.pow(lhs.value, rhs.value));
 				else if(node.op === 'MOD')
@@ -203,49 +272,175 @@ function calculator(line){
 			if(node.op === 'GREATER')
 				return calcBool(lhs.value > rhs.value);
 		}
+		const rhs = visit(node.right);
+		if(rhs === null || rhs.type === 'VOID'){
+			return lhs;
+			//buildErrors.push('RHS was null');
+			//return null;
+		}
+		buildErrors.push('Incompatible types ' + lhs.type + ' and ' + rhs.type + ' with operator ' + node.op);
+		return null;
+	}
+	
+	function sqrtComplex(node){
+		if(node.paramList.length != 1){
+			parseWarnings.push(node.value + ' requires one parameter only');
+			return calcVoid();
+		}
+		const p = visit(node.paramList[0]);
+		if(p.type !== 'NUM'){//Allow sqrt of complex number
+			parseWarnings.push(node.value + ' requires a number');
+			return calcVoid();
+		}
+		if(p.value < 0){
+			return calcComplex(0, Math.sqrt(-p.value));
+		}
+		else
+			return calcNum(Math.sqrt(p.value));
+	}
+	
+	function absComplex(node){
+		if(node.paramList.length != 1){
+			parseWarnings.push(node.value + ' requires one parameter only');
+			return calcVoid();
+		}
+		const p = visit(node.paramList[0]);
+		if(p.type === 'NUM')
+			return calcNum(Math.abs(p.value));
+		else if (p.type === 'COMPLEX')
+			return calcNum(Math.sqrt(p.real * p.real + p.imaginary * p.imaginary));
+		else{
+			parseWarnings.push(node.value + ' requires a number');
+			return calcVoid();
+		}
 	}
 	
 	function oneParamNumFunc(node, callback){
 		if(node.paramList.length != 1){
-			buildErrors.push(node.value + ' requires one parameter only');
-			return null;
+			parseWarnings.push(node.value + ' requires one parameter only');
+			return calcVoid();
 		}
 		const p = visit(node.paramList[0]);
 		if(p.type !== 'NUM'){
-			buildErrors.push(node.value + ' requires a number');
-			return null;
+			parseWarnings.push(node.value + ' requires a number');
+			return calcVoid();
 		}
 		return calcNum(callback(p.value));
 	}
 	
+	function oneParamNumFuncBool(node, callback, defaultVal){
+		if(node.paramList.length != 1){
+			parseWarnings.push(node.value + ' requires one parameter only');
+			return calcBool(defaultVal);
+		}
+		const p = visit(node.paramList[0]);
+		if(p.type !== 'NUM'){
+			parseWarnings.push(node.value + ' requires a number');
+			return calcBool(defaultVal);
+		}
+		return calcBool(callback(p.value));
+	}
+	
 	function twoParamNumFunc(node, callback){
 		if(node.paramList.length != 2){
-			buildErrors.push(node.value + ' requires two parameters only');
-			return null;
+			parseWarnings.push(node.value + ' requires two parameters only');
+			return calcVoid();
 		}
 		const p1 = visit(node.paramList[0]);
 		const p2 = visit(node.paramList[1]);
 		if(p1.type !== 'NUM' || p2.type !== 'NUM'){
-			buildErrors.push(node.value + ' requires two numbers');
-			return null;
+			parseWarnings.push(node.value + ' requires two numbers');
+			return calcVoid();
 		}
 		return calcNum(callback(p1.value, p2.value));
 	}
 	
+	function randomRange(low, high){
+		const min = Math.min(low, high);
+		const max = Math.max(low, high)
+		const diff = max - min;
+		return Math.floor(Math.random() * diff + min);
+	}
+	
 	function sum(node){
-		let result = 0;
+		let result = calcComplex(0,0);
 		for(let i = 0; i < node.paramList.length; i++){
 			const val = visit(node.paramList[i]);
 			if(val.type === 'NUM'){
-				result += val.value;
+				result = calcComplex(result.real + val.value, result.imaginary);
+			}
+			else if(val.type === 'COMPLEX'){
+				result = calcComplex(result.real + val.real, result.imaginary + val.imaginary);
+			}
+			else if(val.type === 'VOID'){
+				parseWarnings.push('Empty element in sum');
+				continue;
 			}
 			else{
-				buildErrors.push('can only Sum numbers');
-				return null;
+				parseWarnings.push('can only sum numbers');
+				return calcVoid();
 			}
 		}
-		return calcNum(result);
+		if(result.imaginary === 0){
+			return calcNum(result.real);
+		}
+		return result;
 	}
+	
+	function round(node){
+		if(node.paramList.length === 1){//default to 0dp
+			const p1 = visit(node.paramList[0]);
+			if(p1.type === 'NUM'){
+				return calcNum(Math.round(p1.value));
+			}
+			else if(p1.type === 'COMPLEX'){
+				return calcComplex(Math.round(p1.real), Math.round(p1.imaginary));
+			}
+			else{
+				parseWarnings.push('Can only round numbers, but saw ' + p1.type);
+				return calcVoid();
+			}
+		}
+		else if(node.paramList.length === 2){
+			const p1 = visit(node.paramList[0]);
+			const p2 = visit(node.paramList[1]);
+			
+			if(p2.type !== 'NUM'){
+				parseWarnings.push('Can only round by a real number');
+				return p1;
+			}
+			const offset = Math.pow(10, p2.value);
+			if(p1.type === 'NUM'){
+				return calcNum(Math.round((p1.value + Number.EPSILON) * offset) / offset);
+			}
+			else if (p1.type === 'COMPLEX'){
+				return calcComplex(Math.round((p1.real + Number.EPSILON) * offset) / offset, Math.round((p1.imaginary + Number.EPSILON) * offset) / offset);
+			}
+			else{
+				parseWarnings.push('Can only round numbers, but saw ' + p1.type);
+				return calcVoid();
+			}
+		}
+		else{
+			parseWarnings.push('Round requires 1-2 parameters');
+			return calcVoid();
+		}
+	}
+	
+	function promoteNumToComplex(num){
+		if(num.type === 'COMPLEX')
+			return num;
+		else if(num.type === 'NUM')
+			return calcComplex(num.value, 0);
+		else{
+			buildErrors.push('Could not promote type ' + num.type + ' to complex');
+			return null;
+		}
+	}
+}
+
+function complexMul(lhs, rhs){
+	return calcComplex((lhs.real * rhs.real) - (lhs.imaginary * rhs.imaginary), (lhs.real * rhs.imaginary) + (rhs.real * lhs.imaginary));
 }
 
 function fullMod(lhs, rhs){

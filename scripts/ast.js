@@ -7,11 +7,26 @@ function numLit(token){
 }
 
 function numLitHEX(token){
-	return {name: 'NumLit', value: parseInt(token.value, 16)};
+	let val = token.value;
+	if(!token.value || token.value.length === 0)
+		val = 0;
+	return {name: 'NumLit', value: parseInt(val, 16)};
 }
 
 function numLitBIN(token){
-	return {name: 'NumLit', value: parseInt(token.value, 2)};
+	let val = token.value;
+	if(!token.value || token.value.length === 0)
+		val = 0;
+	return {name: 'NumLit', value: parseInt(val, 2)};
+}
+
+function complexComponent(token){
+	let val;
+	if(token.value === null)
+		val = 1;
+	else
+		val = parseFloat(token.value, 10);
+	return {name: 'ComplexComponent', value: val};
 }
 
 function noOp(){

@@ -1,14 +1,16 @@
 let parseErrors = [];
+let parseWarnings = [];
 
 function parser(line){
 	let tokenIndex = 0;
 	const tokens = beginLex(line);
 	let currentToken = tokens.length > 0 ? tokens[tokenIndex] : null;
 	parseErrors = [];
+	parseWarnings = [];
 	
 	const root = level_9();
 	if(tokenIndex < tokens.length -1){
-		parseErrors.push('Multiple statements detected.');
+		parseWarnings.push('Multiple statements detected. Are you missing an operator? Or Have ended with a =?. Only first statement is evaluated');
 	}
 	return root;
 	
@@ -51,13 +53,25 @@ function parser(line){
 		else if (token.type === 'LPAREN'){
 			eat('LPAREN');
 			const node = level_9();
-			eat('RPAREN');
+			if(currentToken.type === 'RPAREN')
+				eat('RPAREN');
 			return node;
 		}
 		else if(token.type === 'ID'){
 			return functionOrVariable();
 		}
-		parseErrors.push('Unexpected token ' + token.type);
+		else if (token.type === 'COMPLEX'){
+			eat('COMPLEX');
+			return complexComponent(token);
+		}
+		else if (token.type === 'NAN'){
+			eat('NAN');
+			return numLit(token);
+		}
+		if(token.type === 'EOF')
+			parseWarnings.push('Incomplete equation');
+		else
+			parseWarnings.push('Unexpected token ' + token.type);
 		return noOp();
 	}
 	
@@ -166,7 +180,8 @@ function parser(line){
 					paramList.push(level_9());
 				}
 			}
-			eat('RPAREN');
+			if(currentToken.type === 'RPAREN')
+				eat('RPAREN');
 			return func(token, paramList);
 		}
 		return variable(token);

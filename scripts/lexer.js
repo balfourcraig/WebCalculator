@@ -1,15 +1,17 @@
+let lexErrors = null;
+
 function beginLex(line){
 	let currentChar = null;
 	if(line != null && line.length > 0)
 		currentChar = line[0];
 	let column = 0;
 	
-	let lexErrors = [];
+	lexErrors = [];
 	
 	const tokens = [];
 	
 	let t = getToken();
-	while(t.type != 'EOF'){
+	while(t.type !== 'EOF'){
 		tokens.push(t);
 		t = getToken();
 	}
@@ -35,7 +37,7 @@ function beginLex(line){
 	function id(){
 		let result = '';
 		
-		while (currentChar != null && isLetterOrDigit(currentChar)){
+		while (currentChar != null && isLetter(currentChar)){
 			result += currentChar;
 			advance();
 		}
@@ -72,6 +74,9 @@ function beginLex(line){
 			if(currentChar != '_')
 				result += currentChar;
 			advance();
+		}
+		if(currentChar !== null && isDigit(currentChar)){
+			lexErrors.push('unexpected numbers in binary number');
 		}
 		return token('BINNUM', result);
 	}
@@ -116,7 +121,12 @@ function beginLex(line){
 				}
 			}
 		}
-		return token('NUM', result);
+		if(currentChar === 'i' || currentChar === 'I'){
+			advance();
+			return token('COMPLEX', result);
+		}
+		else
+			return token('NUM', result);
 	}
 	
 	function skipWhitespace(){
@@ -161,6 +171,8 @@ function beginLex(line){
 			if(asID)
 				return asID;
 		}
+		if(currentChar !== null)
+			lexErrors.push('Unknown symbol ' + currentChar + ' parsing stopped here');
 		return token('EOF', null);
 	}
 	
@@ -181,7 +193,7 @@ function isDigit(c){
 }
 
 function isHexDigit(c){
-	return c >= '0' && c <= '9' || (c >= 'a' && c <= 'F') || (c >= 'A' && c <= 'F');
+	return c >= '0' && c <= '9' || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
 function isLetter(c){
@@ -204,6 +216,12 @@ function getKeyword(word){
 			return 'XOR';
 		case 'MOD':
 			return 'MOD';
+		case 'X':
+			return 'MUL';
+		case 'I':
+			return 'COMPLEX';
+		case 'NAN':
+			return 'NAN';
 	}
 	return null;
 }
@@ -222,6 +240,8 @@ function getBiGram(bigram){
 			return 'AND';
 		case '||':
 			return 'OR';
+		case '<>'://Don't really like this notation
+			return 'NOTEQ';
 	}
 	return null;
 }
@@ -241,8 +261,6 @@ function getOneGram(gram){
 		case '-':
 			return 'SUB';
 		case '*':
-			return 'MUL';
-		case 'X':
 			return 'MUL';
 		case '/':
 			return 'DIV';

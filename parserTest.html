@@ -12,11 +12,10 @@
 	<script>
 	
 	function parse(){
-		//const tokens = beginLex(document.getElementById('parseInput').value);
 		const node = parser(document.getElementById('parseInput').value);
 		const output = document.getElementById('parseOutput');
 		output.innerHTML = '';
-		output.innerText = JSON.stringify(node);
+		output.innerText = JSON.stringify(node, null, 4);
 		if(parseErrors && parseErrors.length > 0){
 			output.appendChild(document.createElement('br'));
 			
@@ -59,7 +58,7 @@
 		</header>
 		<section>
 			<input id="parseInput" type="text">
-			<p id="parseOutput"></p>
+			<pre id="parseOutput"></pre>
 		</section>
 		<div class="scrollOverflow"></div>
 	</div>
