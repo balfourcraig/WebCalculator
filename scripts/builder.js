@@ -231,7 +231,6 @@ function calculator(line){
 				else if(node.op === 'POW' && rhs.type === 'NUM'){
 					let powRes = calcComplex(1,0);
 					for(let i = 0; i < rhs.value; i++){
-						console.log(powRes);
 						powRes = complexMul(li, powRes);
 					}
 					return powRes;
@@ -252,8 +251,18 @@ function calculator(line){
 						return calcNum(NaN);
 					}
 				}
-				else if(node.op === 'POW')
-					return calcNum(Math.pow(lhs.value, rhs.value));
+				else if(node.op === 'POW'){
+					if(lhs.value > 0){
+						return calcNum(Math.pow(lhs.value, rhs.value));
+					}
+					else if(lhs.value < 0 && rhs.value === 0.5){
+						return calcComplex(0, Math.sqrt(-lhs.value));
+					}
+					else{
+						parseWarnings.push('fractional powers of negatives are not supported');
+						return calcNum(NaN);
+					}
+				}
 				else if(node.op === 'MOD')
 					return calcNum(fullMod(lhs.value, rhs.value));
 				if(node.op === 'XOR')
