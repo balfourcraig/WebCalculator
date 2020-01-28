@@ -12,6 +12,7 @@
 	<script src="scripts/lexer.js"></script>
 	<script src="scripts/parser.js"></script>
 	<script src="scripts/builder.js"></script>
+	<script src="scripts/exampleBuilder.js"></script>
 	<script>
 	
 	function calc(){
@@ -47,7 +48,13 @@
 			}
 			else{
 				if(result.type === 'NUM'){
-					if(numFormat == 'dec'){
+					if(result.value === Infinity){
+						output.innerText = 'Result too large to represent (IEEE Infinity)';
+					}
+					else if(result.value === Infinity){
+						output.innerText = 'Result too negative to represent (IEEE -Infinity)';
+					}
+					else if(numFormat == 'dec'){
 						output.innerText = result.value.toString();
 					}
 					else{
@@ -128,6 +135,10 @@
 		
 		document.getElementById('calcInput').addEventListener('input', calc);
 		document.getElementById('numFormatSelect').addEventListener('change',calc);
+		document.getElementById('exampleBtn').addEventListener('click', () => {
+			document.getElementById('calcInput').value = buildExample();
+			calc();
+		});
 		//document.getElementById('calcBtn').addEventListener('click',calc);
 	});
 	</script>
@@ -156,9 +167,10 @@
 			<div class="smallSpacer"></div>
 			<p id="calcOutput">&nbsp;</p>
 			<div class="calcHolder">
-				<input id="calcInput" type="text" placeholder="Equation...">
+				<input id="calcInput" type="text" placeholder="Equation..." autofocus>
 				<!--<button id="calcBtn" title="Equals"></button>-->
 			</div>
+			<button id="exampleBtn">Example</button>
 			<ul id="calcErrors" class="error"></ul>
 			<div class="smallSpacer"></div>
 			
