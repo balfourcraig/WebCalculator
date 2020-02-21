@@ -135,8 +135,12 @@
 		
 		document.getElementById('calcInput').addEventListener('input', calc);
 		document.getElementById('numFormatSelect').addEventListener('change',calc);
-		document.getElementById('exampleBtn').addEventListener('click', () => {
-			document.getElementById('calcInput').value = buildExample();
+		document.getElementById('exampleNumBtn').addEventListener('click', () => {
+			document.getElementById('calcInput').value = buildExample('NUM');
+			calc();
+		});
+		document.getElementById('exampleBoolBtn').addEventListener('click', () => {
+			document.getElementById('calcInput').value = buildExample('BOOL');
 			calc();
 		});
 		//document.getElementById('calcBtn').addEventListener('click',calc);
@@ -155,13 +159,14 @@
 	<div class="pageWidth">
 		<header>
 			<h1>Calculator</h1>
+			<a href="https://github.com/balfourcraig/WebCalculator">Source on Github</a>
 		</header>
 		<section>
 			<label for="numFormatSelect">Number display format: </label>
 			<select id="numFormatSelect">
 				<option selected value="dec">Decimal</option>
-				<option value="bin">Binary</option>
-				<option value="hex">Hex</option>
+				<option value="bin">Binary 0b_</option>
+				<option value="hex">Hex 0x_</option>
 			</select><span id="formatWarning" class="warning"></span>
 			<br>
 			<div class="smallSpacer"></div>
@@ -170,7 +175,9 @@
 				<input id="calcInput" type="text" placeholder="Equation..." autofocus>
 				<!--<button id="calcBtn" title="Equals"></button>-->
 			</div>
-			<button id="exampleBtn">Example</button>
+			<br>
+			<button id="exampleNumBtn">Example Number</button>
+			<button id="exampleBoolBtn">Example Boolean</button>
 			<ul id="calcErrors" class="error"></ul>
 			<div class="smallSpacer"></div>
 			
@@ -184,137 +191,117 @@
 			</ul>
 			<hr>
 			
-			<p>Functions and values are not case sensitive</p>
+			<p>Functions and values are NOT case sensitive</p>
 			<hr>
 			<h2>Functions</h2>
+
 			<table>
 				<thead>
 					<tr>
 						<th>Name</th>
-						<th>Parameters</th>
-						<th>Returns</th>
+						<th>Signature</th>
 						<th>Description</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
 						<td>Abs</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Takes the absolute value or magnitude</td>
 					</tr>
 					<tr>
 						<td>aCos</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Arc-Cosine</td>
 					</tr>
 					<tr>
 						<td>aSin</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Arc-Sine</td>
 					</tr>
 					<tr>
 						<td>aTan</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Arc-Tangent</td>
 					</tr>
 					<tr>
 						<td>Ceiling</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Rounds up to nearest whole integer</td>
 					</tr>
 					<tr>
 						<td>Cos</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Cosine of angle in radians</td>
 					</tr>
 					<tr>
 						<td>Floor</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Rounds down to nearest whole integer</td>
 					</tr>
 					<tr>
 						<td>IsEven</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="bool">Boolean</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="bool">Boolean</span></td>
 						<td>Tests if number is even</td>
 					</tr>
 					<tr>
 						<td>IsNaN</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="bool">Boolean</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="bool">Boolean</span></td>
 						<td>Tests if number is NaN(not a number) value</td>
 					</tr>
 					<tr>
 						<td>IsOdd</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="bool">Boolean</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="bool">Boolean</span></td>
 						<td>Tests if number is odd</td>
 					</tr>
 					<tr>
 						<td>Ln</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Natural logarithm</td>
 					</tr>
 					<tr>
 						<td>Log</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Log base 10</td>
 					</tr>
 					<tr>
 						<td>Max</td>
-						<td><span class="num">Number</span>, <span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span>, <span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Largest of two numbers</td>
 					</tr>
 					<tr>
 						<td>Min</td>
-						<td><span class="num">Number</span>, <span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span>, <span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Smallest of two numbers</td>
 					</tr>
 					<tr>
 						<td>Random</td>
-						<td><span class="num">MinNumber</span>, <span class="num">MaxNumber</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span>, <span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Random number between min(inclusive) and max(exclusive)</td>
 					</tr>
 					<tr>
 						<td>Round</td>
-						<td><span class="num">Number</span>, <span class="num">Number</span>(OPTIONAL)</td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span>, <span class="num">Number(Optional)</span> &#8594; <span class="num">Number</span></td>
 						<td>Rounds the given number to the specified precision, or the nearest integer if no second value is provided</td>
 					</tr>
 					<tr>
 						<td>Sin</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Sine of angle in radians</td>
 					</tr>
 					<tr>
 						<td>Sqrt</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span>/<span class="complex">Complex</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span>/<span class="complex">Complex</span></td>
 						<td>Principle square root (returns complex when argument is negative)</td>
 					</tr>
 					<tr>
 						<td>Sum</td>
-						<td><span class="num">Numbers[ ]</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Numbers[ ]</span> &#8594; <span class="num">Number</span></td>
 						<td>Sums all comma separated parameters</td>
 					</tr>
 					<tr>
 						<td>Tan</td>
-						<td><span class="num">Number</span></td>
-						<td><span class="num">Number</span></td>
+						<td><span class="num">Number</span> &#8594; <span class="num">Number</span></td>
 						<td>Tangent of angle in radians</td>
 					</tr>
 				</tbody>

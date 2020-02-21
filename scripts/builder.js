@@ -280,6 +280,13 @@ function calculator(line){
 				return calcBool(lhs.value < rhs.value);
 			if(node.op === 'GREATER')
 				return calcBool(lhs.value > rhs.value);
+			if(lhs.type === 'BOOL' && rhs.type === 'BOOL' && node.op === 'XOR'){
+				console.log(lhs.type);
+				console.log(rhs.type);
+				console.log(lhs.value);
+				console.log(rhs.value);
+				return calcBool(lhs.value || rhs.value && !(lhs.value && rhs.value));
+			}
 		}
 		const rhs = visit(node.right);
 		if(rhs === null || rhs.type === 'VOID'){

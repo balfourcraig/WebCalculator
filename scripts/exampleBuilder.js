@@ -1,66 +1,137 @@
-function buildExample(){
+function buildExample(type){
 	let depth = 0;
 	let maxDepth = 4;
-	return ex(true, true);
 	
-	function ex(limitParen, limitConst, limitComplex){//Weight these a bit better, and provide options like noParen or noConst
+	if(type === 'NUM'){
+		return exNum(true, true);
+	}
+	else if (type === 'BOOL'){
+		return exBoolean(true, true);
+	}
+	else{
+		return 'ERROR';
+	}
+	
+	function exBoolean(limitParen, limitConst){
 		depth++;
-		const rand = Math.random();
+		
+		if(depth > maxDepth){
+			return exBoolConst();
+		}
+		
+		else if (limitParen && limitConst){
+			const selected = Math.floor(Math.random() * 1);
+			switch(selected){
+				case 0:
+					return exBinOpBool();
+			}
+		}
+		else if (limitParen){
+			const selected = Math.floor(Math.random() * 2);
+			switch(selected){
+				case 0:
+					return exBinOpBool();
+				case 1:
+					return exBoolConst();
+			}
+		}
+		else if (limitConst){
+			const selected = Math.floor(Math.random() * 2);
+			switch(selected){
+				case 0:
+					exBinOpBool();
+				case 1:
+					return exParenBool();
+			}
+		}
+		else{
+			const selected = Math.floor(Math.random() * 3);
+			switch(selected){
+				case 0:
+					return exBinOpBool();
+				case 1:
+					return exBoolConst();
+				case 2:
+					return exParenBool();
+			}
+		}
+	}
+	
+	function exNum(limitParen, limitConst, limitComplex){
+		depth++;
 		
 		if(depth > maxDepth){
 			return exNumConst();
 		}
 		else if (limitParen && limitConst){
-			const selected = Math.floor(Math.random() * 2);
-			switch(selected){
-				case 0:
-					return exBinOp(limitComplex);
-				case 1:
-					return exFunction();
-			}
-		}
-		else if (limitParen){
 			const selected = Math.floor(Math.random() * 4);
 			switch(selected){
 				case 0:
-					return exNumConst();
+					return exBinOpNum(limitComplex);
 				case 1:
-					return exBinOp(limitComplex);
+					return exBinOpNum(limitComplex);
 				case 2:
-					return exFunction();
+					return exBinOpNum(limitComplex);
 				case 3:
-					return limitComplex ? exNumConst() : exComplexConst();
+					return exNumFunction();
 			}
 		}
-		else if (limitConst){
-			const selected = Math.floor(Math.random() * 3);
-			switch(selected){
-				case 0:
-					return exBinOp(limitComplex);
-				case 1:
-					return exParen();
-				case 2:
-					return exFunction();
-			}
-		}
-		else{
+		else if (limitParen){
 			const selected = Math.floor(Math.random() * 5);
 			switch(selected){
 				case 0:
 					return exNumConst();
 				case 1:
-					return exBinOp(limitComplex);
+					return exBinOpNum(limitComplex);
 				case 2:
-					return exParen();
+					return exBinOpNum(limitComplex);
 				case 3:
-					return exFunction();
+					return exNumFunction();
 				case 4:
 					return limitComplex ? exNumConst() : exComplexConst();
+				case 5:
+					return exNumVariable();
+			}
+		}
+		else if (limitConst){
+			const selected = Math.floor(Math.random() * 5);
+			switch(selected){
+				case 0:
+					return exBinOpNum(limitComplex);
+				case 1:
+					return exBinOpNum(limitComplex);
+				case 2:
+					return exBinOpNum(limitComplex);
+				case 3:
+					return exParenNum();
+				case 4:
+					return exNumFunction();
+			}
+		}
+		else{
+			const selected = Math.floor(Math.random() * 8);
+			switch(selected){
+				case 0:
+					return exNumConst();
+				case 1:
+					return exBinOpNum(limitComplex);
+				case 2:
+					return exBinOpNum(limitComplex);
+				case 3:
+					return exBinOpNum(limitComplex);
+				case 4:
+					return exParenNum();
+				case 5:
+					return exNumFunction();
+				case 6:
+					return limitComplex ? exNumConst() : exComplexConst();
+				case 7:
+					return exNumVariable();
 			}
 		}
 	}
 
-	function exFunction(){
+	function exNumFunction(){
 		const oneParamFuncs = [
 			'Sqrt',
 			'Ln',
@@ -86,18 +157,34 @@ function buildExample(){
 		let func = '';
 		if(Math.random() > 0.7){//One param
 			func = oneParamFuncs[Math.floor(Math.random() * oneParamFuncs.length)];
-			return func + exParen();
+			return func + exParenNum();
 		}
 		else{
 			func = twoParamFuncs[Math.floor(Math.random() * twoParamFuncs.length)];
-			return func + '(' + ex(true, false, true) + ', ' + ex(true, false, true) + ')';
+			return func + '(' + exNum(true, false, true) + ', ' + exNum(true, false, true) + ')';
 		}
-		
-		
+	}
+	
+	function exNumVariable(){
+		const variables = [
+			'PI',
+			'Infinity',
+			'NegativeInfinity',
+			'e',
+			'Phi',
+			'g',
+			'c',
+			'Random'
+		];
+		return variables[Math.floor(Math.random() * variables.length)];
 	}
 
-	function exParen(){
-		return '(' + ex(true, true, false) + ')'; 
+	function exParenNum(){
+		return '(' + exNum(true, true, false) + ')'; 
+	}
+	
+	function exParenBool(){
+		return '(' + exBoolean(true, true) + ')'; 
 	}
 
 	function exNumConst(){
@@ -108,20 +195,40 @@ function buildExample(){
 			return Math.round(Math.random() * 1000) / 100;
 		}
 	}
+	
+	function exBoolConst(){
+		return Math.random() > 0.5 ? 'True' : 'False';
+	}
 
-	function exBinOp(limitComplex){
+	function exBinOpNum(limitComplex){
 		const op = Math.floor(Math.random() * 5);
 		switch(op){
 			case 0:
-				return ex(false, false, limitComplex) + ' + ' + ex(false, false, limitComplex);
+				return exNum(false, false, limitComplex) + ' + ' + exNum(false, false, limitComplex);
 			case 1:
-				return ex(false, false, limitComplex) + ' - ' + ex(false, false, limitComplex);
+				return exNum(false, false, limitComplex) + ' - ' + exNum(false, false, limitComplex);
 			case 2:
-				return ex(false, false, limitComplex) + ' x ' + ex(false, false, limitComplex);
+				return exNum(false, false, limitComplex) + ' x ' + exNum(false, false, limitComplex);
 			case 3:
-				return ex(false, false, limitComplex) + ' / ' + ex(false, false, limitComplex);
+				return exNum(false, false, limitComplex) + ' / ' + exNum(false, false, limitComplex);
 			case 4:
-				return ex(false, false, true) + ' ^ ' + ex(false, false, true);
+				return exNum(false, false, true) + ' ^ ' + exNum(false, false, true);
+		}
+	}
+	
+	function exBinOpBool(){
+		const op = Math.floor(Math.random() * 5);
+		switch(op){
+			case 0:
+				return exBoolean(false, false) + ' & ' + exBoolean(false, false);
+			case 1:
+				return exBoolean(false, false) + ' | ' + exBoolean(false, false);
+			case 2:
+				return exBoolean(false, false) + ' XOR ' + exBoolean(false, false);
+			case 3:
+				return exBoolean(false, false) + ' AND ' + exBoolean(false, false);
+			case 4:
+				return exBoolean(false, false) + ' OR ' + exBoolean(false, false);
 		}
 	}
 	
