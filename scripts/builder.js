@@ -25,6 +25,10 @@ function calculator(line){
 				return visit_NumLit(node);
 			case 'BinOp':
 				return visit_BinOp(node);
+			case 'PostfixOp':
+				return visit_Postfix(node);
+			case 'AbsBlock':
+				return visit_Abs(node);
 			case 'UnaryOp':
 				return visit_Unary(node);
 			case 'Variable':
@@ -35,6 +39,7 @@ function calculator(line){
 				return visit_ComplexComponent(node);
 			case 'NoOp':
 				return calcVoid();
+			
 		}
 		buildErrors.push('Failed to build node ' + node.name);
 		return calcError(buildErrors);
@@ -120,6 +125,47 @@ function calculator(line){
 	
 	function visit_NumLit(node){
 		return calcNum(node.value);
+	}
+	
+	function visit_Postfix(node){
+		if(node.op === 'NOT'){
+			const val = visit(node.value);
+			if(val.type === 'NUM'){
+				if(val.value === ~~val.value){//integer
+					if(val.value > 0){
+						return calcNum(factorial(val.value));
+					}
+					else{
+						buildErrors.push('Cannot perform factorial on zero or negative (yet)');
+					}
+				}
+				else{
+					buildErrors.push('Cannot perform factorial on a non-integer (yet)');
+				}
+			}
+			else{
+				buildErrors.push('Can only perform factorial on a positive real integer (so far)');
+			}
+		}
+		else{
+			buildErrors.push('Unknown postfix operator ' + node.op);
+		}
+	}
+	
+	function visit_Abs(node){
+		const val = visit(node.value);
+		if(val.type === 'NUM'){
+			if(val.value < 0)
+				return calcNum(-1 * val.value);
+			return val;
+		}
+		else if (val.type ==='COMPLEX'){
+			return calcNum(Math.sqrt(val.real * val.real + val.imaginary * val.imaginary));
+		}
+		else if(val.type === 'BOOL'){
+			return calcBool(true);
+		}
+		buildErrors.push('Cannot take absolute of ' + val.type);
 	}
 	
 	function visit_Unary(node){

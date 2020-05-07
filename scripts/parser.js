@@ -57,6 +57,13 @@ function parser(line){
 				eat('RPAREN');
 			return node;
 		}
+		else if(token.type === 'ABS'){
+			eat('ABS');
+			const node = level_9();
+			if(currentToken.type === 'ABS')
+				eat('ABS');
+			return absBlock(node);
+		}
 		else if(token.type === 'ID'){
 			return functionOrVariable();
 		}
@@ -75,13 +82,27 @@ function parser(line){
 		return noOp();
 	}
 	
-	function level_2(){
+	function level_1_5(){
+		console.log('1.5');
 		let node = level_1();
+		if(currentToken.type === 'NOT'){
+			console.log('postfix');
+			const token = currentToken;
+			eat('NOT');
+			
+			node = postfixOp(node, token);
+		}
+		return node;
+	}
+	
+	function level_2(){
+		console.log('2');
+		let node = level_1_5();
 		while(currentToken.type === 'POW'){
 			const token = currentToken;
 			eat('POW');
 			
-			node = binOp(node, level_1(), token);
+			node = binOp(node, level_1_5(), token);
 		}
 		return node;
 	}

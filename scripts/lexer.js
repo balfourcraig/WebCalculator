@@ -251,7 +251,7 @@ function getOneGram(gram){
 		case '=':
 			return 'EQ';
 		case '!':
-			return 'NOT';
+			return 'NOT';//ambiguous with factorial
 		case '<':
 			return 'LESS';
 		case '>':
@@ -273,7 +273,7 @@ function getOneGram(gram){
 		case ')':
 			return 'RPAREN';
 		case '|':
-			return 'OR';
+			return 'ABS';
 		case '&':
 			return 'AND';
 		case ',':

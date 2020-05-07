@@ -220,9 +220,9 @@ function buildExample(type){
 		const op = Math.floor(Math.random() * 5);
 		switch(op){
 			case 0:
-				return exBoolean(false, false) + ' & ' + exBoolean(false, false);
+				return exBoolean(false, false) + ' && ' + exBoolean(false, false);
 			case 1:
-				return exBoolean(false, false) + ' | ' + exBoolean(false, false);
+				return exBoolean(false, false) + ' || ' + exBoolean(false, false);
 			case 2:
 				return exBoolean(false, false) + ' XOR ' + exBoolean(false, false);
 			case 3:
