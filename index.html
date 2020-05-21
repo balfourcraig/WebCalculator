@@ -165,18 +165,11 @@
 	</script>
 </head>
 <body>
-<div class="navHolder">
-	<nav>
-		<a class="selected" href="index.html">Calculator</a>
-		<a href="lexerTest.html">Lexer</a>
-		<a href="parserTest.html">Parser</a>
-	</nav>
-</div>
 <main>
 	<div class="pageWidth">
 		<header>
 			<h1>Calculator</h1>
-			<a href="https://github.com/balfourcraig/WebCalculator">Source on Github</a>
+			
 		</header>
 		<section>
 			<label for="numFormatSelect">Number display format: </label>
@@ -185,19 +178,19 @@
 				<option value="bin">Binary 0b_</option>
 				<option value="hex">Hex 0x_</option>
 			</select><span id="formatWarning" class="warning"></span>
-			<br>
-			<div class="smallSpacer"></div>
 			<p id="calcOutput">&nbsp;</p>
 			<div class="calcHolder">
 				<input id="calcInput" type="text" placeholder="Equation..." autofocus>
 				<!--<button id="calcBtn" title="Equals"></button>-->
 			</div>
-			<br>
+			<ul id="calcErrors" class="error"></ul>
+		</section>
+		<section>
+			<div class="smallSpacer"></div>
 			<button id="exampleNumBtn">Example Number</button>
 			<button id="exampleBoolBtn">Example Boolean</button>
-			<ul id="calcErrors" class="error"></ul>
-			<div class="smallSpacer"></div>
-			
+			<br>
+			<a href="https://github.com/balfourcraig/WebCalculator">Source on Github</a>
 			<h2>Color Legend</h2>
 			<ul class="legend">
 				<li class="num">Number: Real numbers including integers and decimals, as well as special values like NaN, Infinity, and NegativeInfinity</li>
@@ -404,6 +397,11 @@
 			<p>Hex and binary inputs may not contain decimal points, though decimal may. Hex and binary output format will use decimal points where required</p>
 			<p>Hex and binary numbers may both contain as many _ as you need. So 0b10011101 is exactly the same as 0b_1001_1101</p>
 			<p>Scientific notation is partially supported, within the limits of IEEE double precision floating point numbers.</p>
+			
+			<hr>
+			<p>To see how it's working under the hood, you can try out the lexer and parser components on their own:</p>
+			<h3><a href="lexerTest.html">Lexer</a></h3>
+			<h3><a href="parserTest.html">Parser</a></h3>
 		</section>
 		<div class="scrollOverflow"></div>
 	</div>
