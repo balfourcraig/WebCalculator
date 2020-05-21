@@ -15,6 +15,21 @@
 	<script src="scripts/exampleBuilder.js"></script>
 	<script>
 	
+	function getUrlVars() {
+		var vars = {};
+		var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+			vars[key] = value;
+		});
+		return vars;
+	}
+	
+	function applyURLParameters(){
+		const urlVars = getUrlVars();
+		if(urlVars['calc']){
+			document.getElementById('calcInput').value = urlVars['calc'];
+		}
+	}
+	
 	function calc(){
 		const numFormat = document.getElementById('numFormatSelect').value;
 		const formatWarning = document.getElementById('formatWarning');
@@ -131,6 +146,8 @@
 	}
 	
 	window.addEventListener('DOMContentLoaded', () => {
+		applyURLParameters();
+		
 		calc();
 		
 		document.getElementById('calcInput').addEventListener('input', calc);
