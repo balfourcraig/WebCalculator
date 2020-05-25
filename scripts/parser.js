@@ -82,8 +82,7 @@ function parser(line){
 		return noOp();
 	}
 	
-	function level_1_5(){
-		console.log('1.5');
+	function level_2(){
 		let node = level_1();
 		if(currentToken.type === 'NOT'){
 			console.log('postfix');
@@ -95,28 +94,11 @@ function parser(line){
 		return node;
 	}
 	
-	function level_2(){
-		console.log('2');
-		let node = level_1_5();
+	function level_3(){
+		let node = level_2();
 		while(currentToken.type === 'POW'){
 			const token = currentToken;
 			eat('POW');
-			
-			node = binOp(node, level_1_5(), token);
-		}
-		return node;
-	}
-	
-	function level_3(){
-		let node = level_2();
-		while (currentToken.type === 'MUL' || currentToken.type === 'DIV' || currentToken.type === 'MOD'){
-			const token = currentToken;
-			if(currentToken.type === 'MUL')
-				eat('MUL');
-			if(currentToken.type === 'DIV')
-				eat('DIV');
-			if(currentToken.type === 'MOD')
-				eat('MOD');
 			
 			node = binOp(node, level_2(), token);
 		}
@@ -125,13 +107,9 @@ function parser(line){
 	
 	function level_4(){
 		let node = level_3();
-		while (currentToken.type === 'ADD' || currentToken.type === 'SUB'){
+		while (currentToken.type === 'MUL' || currentToken.type === 'DIV' || currentToken.type === 'MOD'){
 			const token = currentToken;
-			if(currentToken.type === 'ADD')
-				eat('ADD');
-			if(currentToken.type === 'SUB')
-				eat('SUB');
-			
+			eat(token.type);
 			node = binOp(node, level_3(), token);
 		}
 		return node;
@@ -139,9 +117,10 @@ function parser(line){
 	
 	function level_5(){
 		let node = level_4();
-		while(currentToken.type === 'GREATER' || currentToken.type === 'GREATEREQ' ||currentToken.type === 'LESS' ||currentToken.type === 'LESSEQ'){
+		while (currentToken.type === 'ADD' || currentToken.type === 'SUB'){
 			const token = currentToken;
 			eat(token.type);
+			
 			node = binOp(node, level_4(), token);
 		}
 		return node;
@@ -149,10 +128,9 @@ function parser(line){
 	
 	function level_6(){
 		let node = level_5();
-		while(currentToken.type === 'EQ' || currentToken.type === 'NOTEQ'){
+		while(currentToken.type === 'GREATER' || currentToken.type === 'GREATEREQ' ||currentToken.type === 'LESS' ||currentToken.type === 'LESSEQ'){
 			const token = currentToken;
 			eat(token.type);
-			
 			node = binOp(node, level_5(), token);
 		}
 		return node;
@@ -160,9 +138,10 @@ function parser(line){
 	
 	function level_7(){
 		let node = level_6();
-		while (currentToken.type === 'AND'){
+		while(currentToken.type === 'EQ' || currentToken.type === 'NOTEQ'){
 			const token = currentToken;
 			eat(token.type);
+			
 			node = binOp(node, level_6(), token);
 		}
 		return node;
@@ -170,7 +149,7 @@ function parser(line){
 	
 	function level_8(){
 		let node = level_7();
-		while (currentToken.type === 'XOR'){
+		while (currentToken.type === 'AND'){
 			const token = currentToken;
 			eat(token.type);
 			node = binOp(node, level_7(), token);
@@ -180,10 +159,20 @@ function parser(line){
 	
 	function level_9(){
 		let node = level_8();
-		while (currentToken.type === 'OR'){
+		while (currentToken.type === 'XOR'){
 			const token = currentToken;
 			eat(token.type);
 			node = binOp(node, level_8(), token);
+		}
+		return node;
+	}
+	
+	function level_10(){
+		let node = level_9();
+		while (currentToken.type === 'OR'){
+			const token = currentToken;
+			eat(token.type);
+			node = binOp(node, level_9(), token);
 		}
 		return node;
 	}
@@ -195,10 +184,10 @@ function parser(line){
 			eat('LPAREN');
 			const paramList = [];
 			if(currentToken.type !== 'RPAREN'){
-				paramList.push(level_9());
+				paramList.push(level_10());
 				while(currentToken.type === 'COMMA'){
 					eat('COMMA');
-					paramList.push(level_9());
+					paramList.push(level_10());
 				}
 			}
 			if(currentToken.type === 'RPAREN')

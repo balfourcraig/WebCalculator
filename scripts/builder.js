@@ -70,13 +70,15 @@ function calculator(line){
 			case 'ATAN':
 				return oneParamNumFunc(node, Math.atan);
 			case 'FLOOR':
-				return oneParamNumFunc(node, Math.floor);
+				return floorComplex(node);
 			case 'CEILING':
-				return oneParamNumFunc(node, Math.ceil);
+				return ceilingComplex(node);
+			case 'CEIL':
+				return ceilingComplex(node);
 			case 'MAX':
-				return twoParamNumFunc(node, Math.max);
+				return maxComplex(node);
 			case 'MIN':
-				return twoParamNumFunc(node, Math.min);
+				return minComplex(node);
 			case 'LOG':
 				return oneParamNumFunc(node, Math.log10);
 			case 'SUM':
@@ -132,15 +134,21 @@ function calculator(line){
 			const val = visit(node.value);
 			if(val.type === 'NUM'){
 				if(val.value === ~~val.value){//integer
-					if(val.value > 0){
+					if(val.value >= 0){
 						return calcNum(factorial(val.value));
 					}
 					else{
-						buildErrors.push('Cannot perform factorial on zero or negative (yet)');
+						buildErrors.push('Cannot perform factorial on negative (yet)');
 					}
 				}
 				else{
-					buildErrors.push('Cannot perform factorial on a non-integer (yet)');
+					if(val.value >= 0){
+						return calcNum(gammaReal(val.value));
+					}
+					else{
+						buildErrors.push('Cannot perform factorial on negative (yet)');
+					}
+					//buildErrors.push('Cannot perform factorial on a non-integer (yet)');
 				}
 			}
 			else{
@@ -190,7 +198,7 @@ function calculator(line){
 				return calcNum(~val.type);
 			}
 			else if(val.type === 'BOOL'){
-				return calcBool(!val.type);
+				return calcBool(!val.value);
 			}
 			else{
 				buildErrors.push('Unary NOT only works on numbers and booleans');
@@ -370,7 +378,7 @@ function calculator(line){
 		if(p.type === 'NUM')
 			return calcNum(Math.abs(p.value));
 		else if (p.type === 'COMPLEX')
-			return calcNum(Math.sqrt(p.real * p.real + p.imaginary * p.imaginary));
+			return complexMagnitude(p);
 		else{
 			parseWarnings.push(node.value + ' requires a number');
 			return calcVoid();
@@ -449,6 +457,95 @@ function calculator(line){
 		return result;
 	}
 	
+	function floorComplex(node){
+		const val = visit(node.paramList[0]);
+		if(val.type === 'NUM'){
+			return calcNum(Math.floor(val.value));
+		}
+		else if (val.type === 'COMPLEX'){
+			return calcComplex(Math.floor(val.real), Math.floor(val.imaginary));
+		}
+		else{
+			buildErrors.push('Cannot floor ' + val.type);
+			return null;
+		}
+	}
+	
+	function floorComplexMag(node){
+		const val = visit(node.paramList[0]);
+		if (val.type === 'COMPLEX'){
+			const mag = complexMagnitude(val);
+			//const ratio = 
+			//return calcComplex(Math.floor(val.real), Math.floor(val.imaginary));
+		}
+		else{
+			buildErrors.push('Cannot mag floor ' + val.type);
+			return null;
+		}
+	}
+	
+	function ceilingComplex(node){
+		const val = visit(node.paramList[0]);
+		if(val.type === 'NUM'){
+			return calcNum(Math.ceil(val.value));
+		}
+		else if (val.type === 'COMPLEX'){
+			return calcComplex(Math.ceil(val.real), Math.ceil(val.imaginary));
+		}
+		else{
+			buildErrors.push('Cannot ceiling ' + val.type);
+			return null;
+		}
+	}
+	
+	function maxComplex(node){
+		const lhs = visit(node.paramList[0]);
+		const rhs = visit(node.paramList[1]);
+		if(lhs.type === 'NUM' && rhs.type === 'NUM'){
+			return calcNum(Math.max(lhs.value, rhs.value));
+		}
+		else if ((lhs.type === 'NUM' || lhs.type === 'COMPLEX') && (rhs.type === 'NUM' || rhs.type === 'COMPLEX')){
+			const magL = complexMagnitude(promoteNumToComplex(lhs));
+			const magR = complexMagnitude(promoteNumToComplex(rhs));
+			console.log(magL);
+			console.log(magR);
+			if(magL.value >= magR.value){
+				return lhs;
+			}
+			else{
+				return rhs;
+			}
+		}
+		else{
+			buildErrors.push('Cannot perform max between ' + lhs.type + ' and ' + rhs.type);
+			return null;
+		}
+	}
+	
+	function minComplex(node){
+		const lhs = visit(node.paramList[0]);
+		const rhs = visit(node.paramList[1]);
+		if(lhs.type === 'NUM' && rhs.type === 'NUM'){
+			return calcNum(Math.min(lhs.value, rhs.value));
+		}
+		else if ((lhs.type === 'NUM' || lhs.type === 'COMPLEX') && (rhs.type === 'NUM' || rhs.type === 'COMPLEX')){
+			const magL = complexMagnitude(promoteNumToComplex(lhs));
+			const magR = complexMagnitude(promoteNumToComplex(rhs));
+			console.log(magL);
+			console.log(magR);
+			if(magL.value <= magR.value){
+				return lhs;
+			}
+			else{
+				return rhs;
+			}
+		}
+		else{
+			buildErrors.push('Cannot perform min between ' + lhs.type + ' and ' + rhs.type);
+			return null;
+		}
+	}
+	
 	function round(node){
 		if(node.paramList.length === 1){//default to 0dp
 			const p1 = visit(node.paramList[0]);
@@ -501,6 +598,10 @@ function calculator(line){
 	}
 }
 
+function complexMagnitude(complex){
+	return calcNum(Math.sqrt(complex.real * complex.real + complex.imaginary * complex.imaginary));
+}
+
 function complexMul(lhs, rhs){
 	return calcComplex((lhs.real * rhs.real) - (lhs.imaginary * rhs.imaginary), (lhs.real * rhs.imaginary) + (rhs.real * lhs.imaginary));
 }
@@ -516,4 +617,25 @@ function factorial(num){
 		r *= i;
 	}
 	return r;
+}
+
+function gammaReal(x){
+	const p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+        771.32342877765313, -176.61502916214059, 12.507343278686905,
+        -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+    ];
+	
+	const g = 7;
+    if (x < 0.5) {
+        return Math.PI / (Math.sin(Math.PI * x) * gammaReal(1 - x));
+    }
+	
+	//x -= 1;//This is in the actual function, but it breaks it here, and I don't know why
+    let a = p[0];
+    const t = x + g + 0.5;
+    for (let i = 1; i < p.length; i++) {
+        a += p[i] / (x + i);
+    }
+ 
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, x + 0.5) * Math.exp(-t) * a;
 }
