@@ -2,6 +2,10 @@
 	color: green;
 }
 
+.rational{
+	color: #8fbf0b;
+}
+
 .error{
 	color: red;
 }
@@ -48,6 +52,11 @@
 #calcOutput.num{
 	color: #45ff45;
 	border: 2px solid #45ff45;
+}
+
+#calcOutput.rational{
+	color: #bff039;
+	border: 2px solid #bff039;
 }
 
 #calcOutput.bool{

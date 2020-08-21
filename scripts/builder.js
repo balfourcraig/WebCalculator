@@ -1,6 +1,6 @@
-function calculator(line){
+function calculator(line, useRational){
 	const buildErrors = [];
-	const root = parser(line);
+	const root = parser(line, useRational);
 	//if(lexErrors && lexErrors.length > 0){
 		//return calcError(lexErrors);
 	//}
@@ -16,6 +16,9 @@ function calculator(line){
 	}
 	if(result.type === 'COMPLEX' && result.imaginary === 0)
 		return calcNum(result.real);
+	
+	if(result.type === 'RATIONAL')
+		return simplifyRational(result);
 	
 	return result;
 	
@@ -37,6 +40,8 @@ function calculator(line){
 				return visit_Function(node);
 			case 'ComplexComponent':
 				return visit_ComplexComponent(node);
+			case 'Rational':
+				return visit_Rational(node);
 			case 'NoOp':
 				return calcVoid();
 			
@@ -48,7 +53,7 @@ function calculator(line){
 	function visit_ComplexComponent(node){
 		return calcComplex(0, node.value);
 	}
-	
+
 	function visit_Function(node){
 		switch(node.value.toUpperCase()){
 			case 'SQRT':
@@ -93,6 +98,8 @@ function calculator(line){
 				return oneParamNumFuncBool(node, (x) => x % 2 == 0, false);
 			case 'ISODD':
 				return oneParamNumFuncBool(node, (x) => x % 2 == 1, false);
+			case 'RATIONAL':
+				return PromoteRationalFunc(node);
 		}
 		parseWarnings.push('Unknown function: ' + node.value);
 		return calcVoid();
@@ -173,6 +180,9 @@ function calculator(line){
 		else if(val.type === 'BOOL'){
 			return calcBool(true);
 		}
+		else if(val.type === 'RATIONAL'){
+			return calcRational(Math.abs(val.num), Math.abs(val.den));
+		}
 		buildErrors.push('Cannot take absolute of ' + val.type);
 	}
 	
@@ -187,6 +197,9 @@ function calculator(line){
 			}
 			else if (val.type === 'COMPLEX'){
 				return calcComplex(val.real * -1, -1 * val.imaginary);
+			}
+			else if (val.type === 'RATIONAL'){
+				return calcRational(val.num * -1, val.den);
 			}
 			else{
 				buildErrors.push('Unary negative only works on numbers');
@@ -203,6 +216,24 @@ function calculator(line){
 			else{
 				buildErrors.push('Unary NOT only works on numbers and booleans');
 			}
+		}
+	}
+
+	function visit_Rational(node){
+		const lhs = visit(node.left);
+		if(lhs === null){
+			buildErrors.push('LHS was null');
+			return null;
+		}
+		const rhs = visit(node.right);
+		if(rhs === null || rhs.type === 'VOID'){
+			return lhs;
+		}
+		if(lhs.type === 'NUM' && rhs.type === 'NUM'){
+			return calcRational(lhs.value, rhs.value);
+		}
+		else{
+			buildErrors.push('Both sides of a rational must be numbers (for now)');
 		}
 	}
 	
@@ -289,6 +320,31 @@ function calculator(line){
 					}
 					return powRes;
 				}
+				else if (node.op === 'EQ')
+					return calcBool(li.real === ri.real && li.imaginary === ri.imaginary);
+				else if (node.op === 'NOTEQ')
+					return calcBool(!(li.real === ri.real && li.imaginary === ri.imaginary));
+			}
+			if(lhs.type === 'RATIONAL' || rhs.type === 'RATIONAL'){
+				const lr = promoteNumToRational(lhs);
+				const rr = promoteNumToRational(rhs);
+				console.log(lr);
+				console.log(rr);
+				if(node.op === 'ADD'){
+					const den = lr.den * rr.den;
+					const num = lr.num * rr.den + rr.num * lr.den;
+					return calcRational(num,den);
+				}
+				else if(node.op === 'SUB'){
+					const den = lr.den * rr.den;
+					const num = lr.num * rr.den - rr.num * lr.den;
+					return calcRational(num,den);
+				}
+				else if(node.op === 'MUL'){
+					const den = lr.den * rr.den;
+					const num = lr.num * rr.num;
+					return calcRational(num,den);
+				}
 			}
 			if(lhs.type === 'NUM' && rhs.type === 'NUM'){
 				if(node.op === 'ADD')
@@ -335,10 +391,6 @@ function calculator(line){
 			if(node.op === 'GREATER')
 				return calcBool(lhs.value > rhs.value);
 			if(lhs.type === 'BOOL' && rhs.type === 'BOOL' && node.op === 'XOR'){
-				console.log(lhs.type);
-				console.log(rhs.type);
-				console.log(lhs.value);
-				console.log(rhs.value);
 				return calcBool(lhs.value || rhs.value && !(lhs.value && rhs.value));
 			}
 		}
@@ -586,6 +638,15 @@ function calculator(line){
 		}
 	}
 	
+	function PromoteRationalFunc(node){
+		if(node.paramList.length != 1){
+			parseWarnings.push(node.value + ' requires one parameter only');
+			return calcBool(defaultVal);
+		}
+		const p = visit(node.paramList[0]);
+		return promoteNumToRational(p);
+	}
+	
 	function promoteNumToComplex(num){
 		if(num.type === 'COMPLEX')
 			return num;
@@ -593,6 +654,37 @@ function calculator(line){
 			return calcComplex(num.value, 0);
 		else{
 			buildErrors.push('Could not promote type ' + num.type + ' to complex');
+			return null;
+		}
+	}
+	
+	function promoteNumToRational(num){
+		if(num.type === 'RATIONAL')
+			return num;
+		else if(num.type === 'NUM'){
+			if(num.value === ~~num.value){
+				return calcRational(num.value, 1);
+			}
+			else{
+				const recep = 1/num.value;
+				if(recep === ~~recep){
+					return calcRational(1, recep);
+				}
+				const asString = num.value + '';
+				const decLength = asString.substring(asString.indexOf('.') + 1).length;
+				if(decLength > 5){
+					return calcRational(num.value, 1);
+				}
+				else{
+					const shiftedDen = Math.pow(10, decLength);
+					const shiftedNum = num.value * shiftedDen;
+					const divisor = gcd(shiftedNum, shiftedDen);
+					return {type: 'RATIONAL', num: shiftedNum / divisor, den: shiftedDen / divisor};
+				}
+			}
+		}
+		else{
+			buildErrors.push('Could not promote type ' + num.type + ' to rational');
 			return null;
 		}
 	}

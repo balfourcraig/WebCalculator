@@ -30,11 +30,13 @@ function calc(){
 	const input = document.getElementById('calcInput').value;
 	const errorList = document.getElementById('calcErrors');
 	errorList.innerHTML = '';
+	const useRational = document.getElementById('useRationalInput').checked;
 	
 	if(input){
-		const result = calculator(input);
-		output.setAttribute('class', result.type.toLowerCase());
+		const result = calculator(input, useRational);
 		
+		output.setAttribute('class', result.type.toLowerCase());
+		console.log(result);
 		if(result.type == 'ERROR'){
 			output.innerText = 'Invalid or incomplete equation';
 			for(let i = 0; i < result.value.length; i++){
@@ -86,6 +88,20 @@ function calc(){
 					
 				}
 			}
+			else if (result.type === 'RATIONAL'){
+				let formatted = '';
+				if(result.den === 0){
+					formatted = 'Undefined (Div0)';
+				}
+				else if(result.num === 0){
+					formatted = '0';
+				}
+				else{
+					//TODO: format negative nicely
+					formatted = result.num + '/' + result.den;
+				}
+				output.innerText = formatted;
+			}
 			else if (result.type === 'COMPLEX'){
 				let formatted = '';
 				if(result.real != 0){
@@ -135,6 +151,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	
 	document.getElementById('calcInput').addEventListener('input', calc);
 	document.getElementById('numFormatSelect').addEventListener('change',calc);
+	document.getElementById('useRationalInput').addEventListener('change',calc);
 	document.getElementById('exampleNumBtn').addEventListener('click', () => {
 		document.getElementById('calcInput').value = buildExample('NUM');
 		calc();

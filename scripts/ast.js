@@ -24,6 +24,10 @@ function numLitBIN(token){
 	return {name: 'NumLit', value: parseInt(val, 2)};
 }
 
+function rational(left, right){
+	return {name: 'Rational', left:left, right:right, op:token.type};
+}
+
 function complexComponent(token){
 	let val;
 	if(token.value === null)

@@ -1,7 +1,9 @@
 let parseErrors = [];
 let parseWarnings = [];
 
-function parser(line){
+function parser(line, useRational){
+	if(useRational == undefined)
+		useRational = false;
 	let tokenIndex = 0;
 	const tokens = beginLex(line);
 	let currentToken = tokens.length > 0 ? tokens[tokenIndex] : null;
@@ -105,12 +107,24 @@ function parser(line){
 		return node;
 	}
 	
-	function level_4(){
+	function level_4_R(){
 		let node = level_3();
-		while (currentToken.type === 'MUL' || currentToken.type === 'DIV' || currentToken.type === 'MOD'){
+		if(useRational){
+			while (currentToken.type === 'DIV'){
+				const token = currentToken;
+				eat(token.type);
+				node = rational(node, level_3());
+			}
+		}
+		return node;
+	}
+	
+	function level_4(){
+		let node = level_4_R();
+		while (currentToken.type === 'MUL' || (!useRational && currentToken.type === 'DIV') || currentToken.type === 'MOD'){
 			const token = currentToken;
 			eat(token.type);
-			node = binOp(node, level_3(), token);
+			node = binOp(node, level_4_R(), token);
 		}
 		return node;
 	}
