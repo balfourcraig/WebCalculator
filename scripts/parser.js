@@ -10,7 +10,7 @@ function parser(line, useRational){
 	parseErrors = [];
 	parseWarnings = [];
 	
-	const root = level_9();
+	const root = level_10();
 	if(tokenIndex < tokens.length -1){
 		parseWarnings.push('Multiple statements detected. Are you missing an operator? Or Have ended with a =?. Only first statement is evaluated');
 	}

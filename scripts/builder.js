@@ -158,6 +158,14 @@ function calculator(line, useRational){
 					//buildErrors.push('Cannot perform factorial on a non-integer (yet)');
 				}
 			}
+			else if (val.type === 'RATIONAL'){
+				if(val.den === 1 && val.num >= 0){
+					return calcNum(factorial(val.num));
+				}
+				else{
+					buildErrors.push('Cannot perform factorial on a rational number');
+				}
+			}
 			else{
 				buildErrors.push('Can only perform factorial on a positive real integer (so far)');
 			}
@@ -442,7 +450,9 @@ function calculator(line, useRational){
 			parseWarnings.push(node.value + ' requires one parameter only');
 			return calcVoid();
 		}
-		const p = visit(node.paramList[0]);
+		let p = visit(node.paramList[0]);
+		if(p.type === 'RATIONAL')
+			p = calcNum(p.num / p.den);
 		if(p.type !== 'NUM'){
 			parseWarnings.push(node.value + ' requires a number');
 			return calcVoid();
@@ -455,7 +465,9 @@ function calculator(line, useRational){
 			parseWarnings.push(node.value + ' requires one parameter only');
 			return calcBool(defaultVal);
 		}
-		const p = visit(node.paramList[0]);
+		let p = visit(node.paramList[0]);
+		if(p.type === 'RATIONAL')
+			p = calcNum(p.num / p.den);
 		if(p.type !== 'NUM'){
 			parseWarnings.push(node.value + ' requires a number');
 			return calcBool(defaultVal);
@@ -468,13 +480,20 @@ function calculator(line, useRational){
 			parseWarnings.push(node.value + ' requires two parameters only');
 			return calcVoid();
 		}
-		const p1 = visit(node.paramList[0]);
-		const p2 = visit(node.paramList[1]);
-		if(p1.type !== 'NUM' || p2.type !== 'NUM'){
+		let p1 = visit(node.paramList[0]);
+		let p2 = visit(node.paramList[1]);
+		if(p1.type === 'RATIONAL')
+			p1 = calcNum(p1.num / p1.den);
+		if(p2.type === 'RATIONAL')
+			p2 = calcNum(p2.num / p2.den);
+		
+		if(p1.type === 'NUM' && p2.type === 'NUM'){
+			return calcNum(callback(p1.value, p2.value));
+		}
+		else{
 			parseWarnings.push(node.value + ' requires two numbers');
 			return calcVoid();
 		}
-		return calcNum(callback(p1.value, p2.value));
 	}
 	
 	function randomRange(low, high){
