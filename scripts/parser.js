@@ -10,10 +10,18 @@ function parser(line, useRational){
 	parseErrors = [];
 	parseWarnings = [];
 	
-	const root = level_10();
-	if(tokenIndex < tokens.length -1){
-		parseWarnings.push('Multiple statements detected. Are you missing an operator? Or Have ended with a =?. Only first statement is evaluated');
+	let root = level_10();
+	let statementCount = 1;
+	while(tokenIndex < tokens.length - 1){
+		root = binOp(root, level_10(), {type: 'MUL', value: 'MUL'});
+		statementCount++;
 	}
+	if(statementCount > 1){
+		parseWarnings.push(statementCount + ' statements detected. Treated as implicit multiplication');
+	}
+	//if(tokenIndex < tokens.length -1){
+		//parseWarnings.push('Multiple statements detected. Are you missing an operator? Or Have ended with a =?. Only first statement is evaluated');
+	//}
 	return root;
 	
 	function eat(type){
@@ -87,10 +95,8 @@ function parser(line, useRational){
 	function level_2(){
 		let node = level_1();
 		if(currentToken.type === 'NOT'){
-			console.log('postfix');
 			const token = currentToken;
 			eat('NOT');
-			
 			node = postfixOp(node, token);
 		}
 		return node;
@@ -101,7 +107,6 @@ function parser(line, useRational){
 		while(currentToken.type === 'POW'){
 			const token = currentToken;
 			eat('POW');
-			
 			node = binOp(node, level_2(), token);
 		}
 		return node;
