@@ -12,9 +12,20 @@ function parser(line, useRational){
 	
 	let root = level_10();
 	let statementCount = 1;
-	while(tokenIndex < tokens.length - 1){
+	
+	let finalTokenIndex = 0;
+	let itter = 0;
+	while(tokenIndex < tokens.length - 1 && itter < 20 && finalTokenIndex != tokenIndex){
+		finalTokenIndex = tokenIndex;
 		root = binOp(root, level_10(), {type: 'MUL', value: 'MUL'});
 		statementCount++;
+		itter++;
+	}
+	if(itter == 20){
+		parseWarnings.push('over 20 statements detected, further statements are ignored');
+	}
+	if(currentToken.type != 'EOF'){
+		parseWarnings.push('Equation ended unexpededly');
 	}
 	if(statementCount > 1){
 		parseWarnings.push(statementCount + ' statements detected. Treated as implicit multiplication');
