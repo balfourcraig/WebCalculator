@@ -33,18 +33,19 @@ function calc(){
 	const useRational = document.getElementById('useRationalInput').checked;
 	
 	if(input){
-		const result = calculator(input, useRational);
+		const calculatorOutput = calculator(input, useRational);
+		const result = calculatorOutput.result;
+		const errors = calculatorOutput.errors;
 		
 		output.setAttribute('class', result.type.toLowerCase());
-		console.log(result);
 		if(result.type == 'ERROR'){
 			output.innerText = 'Invalid or incomplete equation';
-			for(let i = 0; i < result.value.length; i++){
-				const li = document.createElement('li');
-				li.setAttribute('class', result.type.toLowerCase());
-				li.innerText = 'ERROR: ' + result.value[i];
-				errorList.appendChild(li);
-			}
+			// for(let i = 0; i < result.value.length; i++){
+			// 	const li = document.createElement('li');
+			// 	li.setAttribute('class', result.type.toLowerCase());
+			// 	li.innerText = 'ERROR: ' + result.value[i];
+			// 	errorList.appendChild(li);
+			// }
 		}
 		else{
 			if(result.type === 'NUM'){
@@ -128,19 +129,14 @@ function calc(){
 				output.innerText = result.value.toString();
 			}
 		}
+		for(let e of errors){
+			const li = document.createElement('li');
+			li.classList.add(e.type.toLowerCase());
+			li.classList.add(e.severety.toLowerCase());
+			li.innerText = e.type.toUpperCase() + ': ' + e.value;
+			errorList.appendChild(li);
+		}
 		
-		for(let i = 0; i < parseWarnings.length; i++){
-			const li = document.createElement('li');
-			li.setAttribute('class', 'warning');
-			li.innerText = 'WARNING: ' + parseWarnings[i];
-			errorList.appendChild(li);
-		}
-		for(let i = 0; i < lexErrors.length; i++){
-			const li = document.createElement('li');
-			li.setAttribute('class', 'warning');
-			li.innerText = 'WARNING: ' + lexErrors[i];
-			errorList.appendChild(li);
-		}
 	}
 }
 

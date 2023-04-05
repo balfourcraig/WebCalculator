@@ -10,8 +10,8 @@ function calcBool(value){
 	return {type: 'BOOL', value: value};
 }
 
-function calcError(value){
-	return {type: 'ERROR', value: value};
+function calcError(){
+	return {type: 'ERROR', value: null};
 }
 
 function calcVoid(){

@@ -57,6 +57,10 @@ function variable(token){
 	return {name: 'Variable', value: token.value};
 }
 
-function assign(keyword, id, token){
-	return {name: 'Assign', keyword: keyword, id: id, token: token};
+function assign(id, token){
+	return {name: 'Assign', id: id, value: token};
+}
+
+function compoundStatement(...statements){
+	return {name: 'CompoundStatement', value: statements};
 }

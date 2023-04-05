@@ -1,26 +1,49 @@
+function buildError(contents, severety = 'error'){
+	return {type: 'build', value: contents, severety, position: -1};
+}
+
 function calculator(line, useRational){
 	const buildErrors = [];
-	const root = parser(line, useRational);
+	const globalScope = {};
+	const parseResult = parser(line, useRational);
+	const root = parseResult.root;
+	const parseErrors = parseResult.errors;
 	//if(lexErrors && lexErrors.length > 0){
 		//return calcError(lexErrors);
 	//}
+	let critical = false;
 	if(parseErrors && parseErrors.length > 0){
-		return calcError(parseErrors);
+		for(let i = 0; i < parseErrors.length; i++){
+			if(parseErrors[i].severety === 'error'){
+				critical = true;
+				break;
+			}
+		}
+		if(critical)
+			return {result: calcError(), errors: parseErrors};
 	}
-	const result = visit(root);
+	let result = visit(root);
 	if(result === null){
-		buildErrors.push('Could not calculate a meaningful result');
+		buildErrors.push(buildError('Could not calculate a meaningful result'));
 	}
 	if(buildErrors && buildErrors.length > 0){
-		return calcError(buildErrors);
+		for(let i = 0; i < buildErrors.length; i++){
+			if(buildErrors[i].severety === 'error'){
+				critical = true;
+				break;
+			}
+		}
+		if(critical)
+			result =  calcError();
 	}
 	if(result.type === 'COMPLEX' && result.imaginary === 0)
-		return calcNum(result.real);
+		result =  calcNum(result.real);
 	
 	if(result.type === 'RATIONAL')
-		return simplifyRational(result);
-	
-	return result;
+		result = simplifyRational(result);
+
+	const errors = buildErrors.concat(parseErrors);
+	return {result, errors};
 	
 	function visit(node){
 		switch(node.name){
@@ -42,14 +65,34 @@ function calculator(line, useRational){
 				return visit_ComplexComponent(node);
 			case 'Rational':
 				return visit_Rational(node);
+			case 'Assign':
+				return visit_Assign(node);
+			case 'CompoundStatement':
+				return visit_CompoundStatement(node);
 			case 'NoOp':
 				return calcVoid();
 			
 		}
-		buildErrors.push('Failed to build node ' + node.name);
-		return calcError(buildErrors);
+		buildErrors.push(buildError('Failed to build node ' + node.name));
+		return calcError();
 	}
 	
+	function visit_CompoundStatement(node){
+		let result = calcVoid();
+		let expressionCount = 0;
+		for(let i = 0; i < node.value.length; i++){
+			const s = visit(node.value[i]);
+			if(s.name !== 'NoOp' && s.type !== 'VOID'){
+				if(expressionCount === 0)
+					result = s;
+				expressionCount++;
+			}
+		}
+		if(expressionCount > 1)
+			buildErrors.push(buildError(`${expressionCount} expressions. Only showing expression 1`, 'warning'));
+		return result;
+	}
+
 	function visit_ComplexComponent(node){
 		return calcComplex(0, node.value);
 	}
@@ -101,7 +144,7 @@ function calculator(line, useRational){
 			case 'RATIONAL':
 				return PromoteRationalFunc(node);
 		}
-		parseWarnings.push('Unknown function: ' + node.value);
+		buildErrors.push(buildError('Unknown function: ' + node.value, 'warning'));
 		return calcVoid();
 	}
 	
@@ -128,7 +171,15 @@ function calculator(line, useRational){
 			case 'RANDOM':
 				return calcNum(Math.random());
 		}
-		parseWarnings.push('Unknown variable: ' + node.value);
+		if(globalScope[node.value] !== undefined)
+			return globalScope[node.value];
+		buildErrors.push(buildError('Unknown variable: ' + node.value));
+		return calcVoid();
+	}
+
+	function visit_Assign(node){
+		const val = visit(node.value);
+		globalScope[node.id.value] = val;
 		return calcVoid();
 	}
 	
@@ -145,7 +196,7 @@ function calculator(line, useRational){
 						return calcNum(factorial(val.value));
 					}
 					else{
-						buildErrors.push('Cannot perform factorial on negative (yet)');
+						buildErrors.push(buildError('Cannot perform factorial on negative (yet)'));
 					}
 				}
 				else{
@@ -153,7 +204,7 @@ function calculator(line, useRational){
 						return calcNum(gammaReal(val.value));
 					}
 					else{
-						buildErrors.push('Cannot perform factorial on negative (yet)');
+						buildErrors.push(buildError('Cannot perform factorial on negative (yet)'));
 					}
 					//buildErrors.push('Cannot perform factorial on a non-integer (yet)');
 				}
@@ -163,15 +214,15 @@ function calculator(line, useRational){
 					return calcNum(factorial(val.num));
 				}
 				else{
-					buildErrors.push('Cannot perform factorial on a rational number');
+					buildErrors.push(buildError('Cannot perform factorial on a rational number'));
 				}
 			}
 			else{
-				buildErrors.push('Can only perform factorial on a positive real integer (so far)');
+				buildErrors.push(buildError('Can only perform factorial on a positive real integer (so far)'));
 			}
 		}
 		else{
-			buildErrors.push('Unknown postfix operator ' + node.op);
+			buildErrors.push(buildError('Unknown postfix operator ' + node.op));
 		}
 	}
 	
@@ -191,7 +242,7 @@ function calculator(line, useRational){
 		else if(val.type === 'RATIONAL'){
 			return calcRational(Math.abs(val.num), Math.abs(val.den));
 		}
-		buildErrors.push('Cannot take absolute of ' + val.type);
+		buildErrors.push(buildError('Cannot take absolute of ' + val.type));
 	}
 	
 	function visit_Unary(node){
@@ -210,7 +261,7 @@ function calculator(line, useRational){
 				return calcRational(val.num * -1, val.den);
 			}
 			else{
-				buildErrors.push('Unary negative only works on numbers');
+				buildErrors.push(buildError('Unary negative only works on numbers'));
 			}
 		}
 		else if(node.op === 'NOT'){
@@ -222,7 +273,7 @@ function calculator(line, useRational){
 				return calcBool(!val.value);
 			}
 			else{
-				buildErrors.push('Unary NOT only works on numbers and booleans');
+				buildErrors.push(buildError('Unary NOT only works on numbers and booleans'));
 			}
 		}
 	}
@@ -230,7 +281,7 @@ function calculator(line, useRational){
 	function visit_Rational(node){
 		const lhs = visit(node.left);
 		if(lhs === null){
-			buildErrors.push('LHS was null');
+			buildErrors.push(buildError('LHS was null'));
 			return null;
 		}
 		const rhs = visit(node.right);
@@ -241,14 +292,14 @@ function calculator(line, useRational){
 			return calcRational(lhs.value, rhs.value);
 		}
 		else{
-			buildErrors.push('Both sides of a rational must be numbers (for now)');
+			buildErrors.push(buildError('Both sides of a rational must be numbers (for now)'));
 		}
 	}
 	
 	function visit_BinOp(node){
 		const lhs = visit(node.left);
 		if(lhs === null){
-			buildErrors.push('LHS was null');
+			buildErrors.push(buildError('LHS was null'));
 			return null;
 		}
 		if(node.op === 'AND' || node.op === 'OR'){
@@ -269,7 +320,7 @@ function calculator(line, useRational){
 							return calcBool(lhs.value || rhs.value);
 					}
 					else{
-						buildErrors.push('RHS was not a boolean');
+						buildErrors.push(buildError('RHS was not a boolean'));
 						return null;
 					}
 				}
@@ -288,11 +339,11 @@ function calculator(line, useRational){
 					}
 				}
 				else{
-					buildErrors.push('RHS was not a number');
+					buildErrors.push(buildError('RHS was not a number'));
 					return null;
 				}
 			}
-			buildErrors.push('Incompatible types');
+			buildErrors.push(buildError('Incompatible types'));
 			return null;
 		}
 		else{
@@ -313,7 +364,7 @@ function calculator(line, useRational){
 					return complexMul(li,ri);
 				else if(node.op === 'DIV'){
 					if(!ri.real && !ri.imaginary){
-						parseWarnings.push('Divide by 0 is undefined');
+						parseErrors.push(buildError('Divide by 0 is undefined', 'warning'));
 						return calcNum(NaN);
 					}
 					const conjugate = calcComplex(ri.real, -ri.imaginary);
@@ -365,7 +416,7 @@ function calculator(line, useRational){
 					if(rhs.value)
 						return calcNum(lhs.value / rhs.value);
 					else{
-						parseWarnings.push('Divide by 0 is undefined');
+						parseErrors.push(buildError('Divide by 0 is undefined', 'warning'));
 						return calcNum(NaN);
 					}
 				}
@@ -377,7 +428,7 @@ function calculator(line, useRational){
 						return calcComplex(0, Math.sqrt(-lhs.value));
 					}
 					else{
-						parseWarnings.push('fractional powers of negatives are not supported');
+						parseErrors.push(buildError('fractional powers of negatives are not supported', 'warning'));
 						return calcNum(NaN);
 					}
 				}
@@ -399,7 +450,7 @@ function calculator(line, useRational){
 			if(node.op === 'GREATER')
 				return calcBool(lhs.value > rhs.value);
 			if(lhs.type === 'BOOL' && rhs.type === 'BOOL' && node.op === 'XOR'){
-				return calcBool(lhs.value || rhs.value && !(lhs.value && rhs.value));
+				return calcBool((lhs.value || rhs.value) && !(lhs.value && rhs.value));
 			}
 		}
 		const rhs = visit(node.right);
@@ -408,18 +459,18 @@ function calculator(line, useRational){
 			//buildErrors.push('RHS was null');
 			//return null;
 		}
-		buildErrors.push('Incompatible types ' + lhs.type + ' and ' + rhs.type + ' with operator ' + node.op);
+		buildErrors.push(buildError('Incompatible types ' + lhs.type + ' and ' + rhs.type + ' with operator ' + node.op));
 		return null;
 	}
 	
 	function sqrtComplex(node){
 		if(node.paramList.length != 1){
-			parseWarnings.push(node.value + ' requires one parameter only');
+			parseErrors.push(buildError(node.value + ' requires one parameter only', 'warning'));
 			return calcVoid();
 		}
 		const p = visit(node.paramList[0]);
 		if(p.type !== 'NUM'){//Allow sqrt of complex number
-			parseWarnings.push(node.value + ' requires a number');
+			parseErrors.push(buildError(node.value + ' requires a number', 'warning'));
 			return calcVoid();
 		}
 		if(p.value < 0){
@@ -431,7 +482,7 @@ function calculator(line, useRational){
 	
 	function absComplex(node){
 		if(node.paramList.length != 1){
-			parseWarnings.push(node.value + ' requires one parameter only');
+			parseErrors.push(buildError(node.value + ' requires one parameter only', 'warning'));
 			return calcVoid();
 		}
 		const p = visit(node.paramList[0]);
@@ -440,21 +491,21 @@ function calculator(line, useRational){
 		else if (p.type === 'COMPLEX')
 			return complexMagnitude(p);
 		else{
-			parseWarnings.push(node.value + ' requires a number');
+			parseErrors.push(buildError(node.value + ' requires a number', 'warning'));
 			return calcVoid();
 		}
 	}
 	
 	function oneParamNumFunc(node, callback){
 		if(node.paramList.length != 1){
-			parseWarnings.push(node.value + ' requires one parameter only');
+			parseErrors.push(buildError(node.value + ' requires one parameter only', 'warning'));
 			return calcVoid();
 		}
 		let p = visit(node.paramList[0]);
 		if(p.type === 'RATIONAL')
 			p = calcNum(p.num / p.den);
 		if(p.type !== 'NUM'){
-			parseWarnings.push(node.value + ' requires a number');
+			parseErrors.push(buildError(node.value + ' requires a number', 'warning'));
 			return calcVoid();
 		}
 		return calcNum(callback(p.value));
@@ -462,14 +513,14 @@ function calculator(line, useRational){
 	
 	function oneParamNumFuncBool(node, callback, defaultVal){
 		if(node.paramList.length != 1){
-			parseWarnings.push(node.value + ' requires one parameter only');
+			parseErrors.push(buildError(node.value + ' requires one parameter only', 'warning'));
 			return calcBool(defaultVal);
 		}
 		let p = visit(node.paramList[0]);
 		if(p.type === 'RATIONAL')
 			p = calcNum(p.num / p.den);
 		if(p.type !== 'NUM'){
-			parseWarnings.push(node.value + ' requires a number');
+			parseErrors.push(buildError(node.value + ' requires a number', 'warning'));
 			return calcBool(defaultVal);
 		}
 		return calcBool(callback(p.value));
@@ -477,7 +528,7 @@ function calculator(line, useRational){
 	
 	function twoParamNumFunc(node, callback){
 		if(node.paramList.length != 2){
-			parseWarnings.push(node.value + ' requires two parameters only');
+			parseErrors.push(buildError(node.value + ' requires two parameters only', 'warning'));
 			return calcVoid();
 		}
 		let p1 = visit(node.paramList[0]);
@@ -491,7 +542,7 @@ function calculator(line, useRational){
 			return calcNum(callback(p1.value, p2.value));
 		}
 		else{
-			parseWarnings.push(node.value + ' requires two numbers');
+			parseErrors.push(buildError(node.value + ' requires two numbers', 'warning'));
 			return calcVoid();
 		}
 	}
@@ -514,11 +565,11 @@ function calculator(line, useRational){
 				result = calcComplex(result.real + val.real, result.imaginary + val.imaginary);
 			}
 			else if(val.type === 'VOID'){
-				parseWarnings.push('Empty element in sum');
+				parseErrors.push(buildError('Empty element in sum', 'warning'));
 				continue;
 			}
 			else{
-				parseWarnings.push('can only sum numbers');
+				parseErrors.push(buildError('can only sum numbers', 'warning'));
 				return calcVoid();
 			}
 		}
@@ -537,7 +588,7 @@ function calculator(line, useRational){
 			return calcComplex(Math.floor(val.real), Math.floor(val.imaginary));
 		}
 		else{
-			buildErrors.push('Cannot floor ' + val.type);
+			buildErrors.push(buildError('Cannot floor ' + val.type));
 			return null;
 		}
 	}
@@ -550,7 +601,7 @@ function calculator(line, useRational){
 			//return calcComplex(Math.floor(val.real), Math.floor(val.imaginary));
 		}
 		else{
-			buildErrors.push('Cannot mag floor ' + val.type);
+			buildErrors.push(buildError('Cannot mag floor ' + val.type));
 			return null;
 		}
 	}
@@ -564,7 +615,7 @@ function calculator(line, useRational){
 			return calcComplex(Math.ceil(val.real), Math.ceil(val.imaginary));
 		}
 		else{
-			buildErrors.push('Cannot ceiling ' + val.type);
+			buildErrors.push(buildError('Cannot ceiling ' + val.type));
 			return null;
 		}
 	}
@@ -588,7 +639,7 @@ function calculator(line, useRational){
 			}
 		}
 		else{
-			buildErrors.push('Cannot perform max between ' + lhs.type + ' and ' + rhs.type);
+			buildErrors.push(buildError('Cannot perform max between ' + lhs.type + ' and ' + rhs.type));
 			return null;
 		}
 	}
@@ -612,7 +663,7 @@ function calculator(line, useRational){
 			}
 		}
 		else{
-			buildErrors.push('Cannot perform min between ' + lhs.type + ' and ' + rhs.type);
+			buildErrors.push(buildError('Cannot perform min between ' + lhs.type + ' and ' + rhs.type));
 			return null;
 		}
 	}
@@ -627,7 +678,7 @@ function calculator(line, useRational){
 				return calcComplex(Math.round(p1.real), Math.round(p1.imaginary));
 			}
 			else{
-				parseWarnings.push('Can only round numbers, but saw ' + p1.type);
+				parseErrors.push(buildError('Can only round numbers, but saw ' + p1.type, 'warning'));
 				return calcVoid();
 			}
 		}
@@ -636,7 +687,7 @@ function calculator(line, useRational){
 			const p2 = visit(node.paramList[1]);
 			
 			if(p2.type !== 'NUM'){
-				parseWarnings.push('Can only round by a real number');
+				parseErrors.push(buildError('Can only round by a real number', 'warning'));
 				return p1;
 			}
 			const offset = Math.pow(10, p2.value);
@@ -647,19 +698,19 @@ function calculator(line, useRational){
 				return calcComplex(Math.round((p1.real + Number.EPSILON) * offset) / offset, Math.round((p1.imaginary + Number.EPSILON) * offset) / offset);
 			}
 			else{
-				parseWarnings.push('Can only round numbers, but saw ' + p1.type);
+				parseErrors.push(buildError('Can only round numbers, but saw ' + p1.type, 'warning'));
 				return calcVoid();
 			}
 		}
 		else{
-			parseWarnings.push('Round requires 1-2 parameters');
+			parseErrors.push(buildError('Round requires 1-2 parameters', 'warning'));
 			return calcVoid();
 		}
 	}
 	
 	function PromoteRationalFunc(node){
 		if(node.paramList.length != 1){
-			parseWarnings.push(node.value + ' requires one parameter only');
+			parseErrors.push(buildError(node.value + ' requires one parameter only', 'warning'));
 			return calcBool(defaultVal);
 		}
 		const p = visit(node.paramList[0]);
@@ -672,7 +723,7 @@ function calculator(line, useRational){
 		else if(num.type === 'NUM')
 			return calcComplex(num.value, 0);
 		else{
-			buildErrors.push('Could not promote type ' + num.type + ' to complex');
+			buildErrors.push(buildError('Could not promote type ' + num.type + ' to complex'));
 			return null;
 		}
 	}
@@ -703,7 +754,7 @@ function calculator(line, useRational){
 			}
 		}
 		else{
-			buildErrors.push('Could not promote type ' + num.type + ' to rational');
+			buildErrors.push(buildError('Could not promote type ' + num.type + ' to rational'));
 			return null;
 		}
 	}

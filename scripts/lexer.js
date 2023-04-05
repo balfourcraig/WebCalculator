@@ -1,12 +1,10 @@
-let lexErrors = null;
-
 function beginLex(line){
 	let currentChar = null;
 	if(line != null && line.length > 0)
 		currentChar = line[0];
 	let column = 0;
 	
-	lexErrors = [];
+	const lexErrors = [];
 	
 	const tokens = [];
 	
@@ -16,8 +14,12 @@ function beginLex(line){
 		t = getToken();
 	}
 	tokens.push(t);
-	return tokens;
+	return {tokens, errors: lexErrors};
 	
+	function lexError(contents, severety = 'error'){
+		return {type: 'lex', value: contents, severety, position: column};
+	}
+
 	function advance(){
 		column += 1;
 		if(column < line.length)
@@ -76,7 +78,7 @@ function beginLex(line){
 			advance();
 		}
 		if(currentChar !== null && isDigit(currentChar)){
-			lexErrors.push('unexpected numbers in binary number');
+			lexErrors.push(lexError('unexpected numbers in binary number'));
 		}
 		return token('BINNUM', result);
 	}
@@ -172,7 +174,7 @@ function beginLex(line){
 				return asID;
 		}
 		if(currentChar !== null)
-			lexErrors.push('Unknown symbol ' + currentChar + ' parsing stopped here');
+			lexErrors.push(lexError('Unknown symbol ' + currentChar + ' parsing stopped here'));
 		return token('EOF', null);
 	}
 	
@@ -223,7 +225,9 @@ function getKeyword(word){
 		case 'NAN':
 			return 'NAN';
 		case 'LET':
-			return 'LET';
+			return 'ASSIGN';
+		case 'MUT':
+			return 'MUT';
 	}
 	return null;
 }
@@ -279,6 +283,8 @@ function getOneGram(gram){
 		case '&':
 			return 'AND';
 		case ',':
+			return 'COMMA';
+		case ';':
 			return 'COMMA';
 	}
 	return null;

@@ -16,21 +16,21 @@
 		const output = document.getElementById('parseOutput');
 		output.innerHTML = '';
 		output.innerText = JSON.stringify(node, null, 4);
-		if(parseErrors && parseErrors.length > 0){
-			output.appendChild(document.createElement('br'));
+		// if(parseErrors && parseErrors.length > 0){
+		// 	output.appendChild(document.createElement('br'));
 			
-			const lbl = document.createElement('p');
-			lbl.innerText = 'Errors:';
-			output.appendChild(lbl);
+		// 	const lbl = document.createElement('p');
+		// 	lbl.innerText = 'Errors:';
+		// 	output.appendChild(lbl);
 			
-			const list = document.createElement('ul');
-			for(let i = 0; i < parseErrors.length; i++){
-				const line = document.createElement('li');
-				line.innerText = parseErrors[i];
-				list.appendChild(line);
-			}
-			output.appendChild(list);
-		}
+		// 	const list = document.createElement('ul');
+		// 	for(let i = 0; i < parseErrors.length; i++){
+		// 		const line = document.createElement('li');
+		// 		line.innerText = parseErrors[i];
+		// 		list.appendChild(line);
+		// 	}
+		// 	output.appendChild(list);
+		// }
 	}
 	
 	window.addEventListener('DOMContentLoaded', () => {

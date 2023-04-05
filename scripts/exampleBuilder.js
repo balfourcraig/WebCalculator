@@ -208,7 +208,7 @@ function buildExample(type){
 			case 1:
 				return exNum(false, false, limitComplex) + ' - ' + exNum(false, false, limitComplex);
 			case 2:
-				return exNum(false, false, limitComplex) + ' x ' + exNum(false, false, limitComplex);
+				return exNum(false, false, limitComplex) + ' * ' + exNum(false, false, limitComplex);
 			case 3:
 				return exNum(false, false, limitComplex) + ' / ' + exNum(false, false, limitComplex);
 			case 4:

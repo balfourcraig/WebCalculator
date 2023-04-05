@@ -1,47 +1,62 @@
-let parseErrors = [];
-let parseWarnings = [];
-
 function parser(line, useRational){
 	if(useRational == undefined)
 		useRational = false;
 	let tokenIndex = 0;
-	const tokens = beginLex(line);
+	const lexResult = beginLex(line);
+	const tokens = lexResult.tokens;
+	const lexErrors = lexResult.errors;
 	let currentToken = tokens.length > 0 ? tokens[tokenIndex] : null;
-	parseErrors = [];
-	parseWarnings = [];
+	const parseErrors = [];
 	
-	let root = level_10();
+	const statements = [];
+	statements.push(level_10());
 	let statementCount = 1;
 	
 	let finalTokenIndex = 0;
 	let itter = 0;
 	while(tokenIndex < tokens.length - 1 && itter < 20 && finalTokenIndex != tokenIndex){
 		finalTokenIndex = tokenIndex;
-		root = binOp(root, level_10(), {type: 'MUL', value: 'MUL'});
+		//root = binOp(root, level_10(), {type: 'MUL', value: 'MUL'});
+		if(currentToken.type === 'COMMA'){
+			eat('COMMA');
+		}
+		statements.push(level_10());
 		statementCount++;
 		itter++;
 	}
+	const statementsWithMult = [];
+	for(let i = 0; i < statements.length; i++){
+		let node = statements[i];
+		while(i < statements.length -1 && statements[i].parens && statements[i+1].parens){
+			node = binOp(node, statements[i+1], {type: 'MUL', value: 'MUL'});
+			i++;
+			statementCount--;
+		}
+		statementsWithMult.push(node);
+	}
 	if(itter == 20){
-		parseWarnings.push('over 20 statements detected, further statements are ignored');
+		parseErrors.push(parseError('over 20 statements detected, further statements are ignored', 'warning'));
 	}
 	if(currentToken.type != 'EOF'){
-		parseWarnings.push('Equation ended unexpededly');
+		parseErrors.push(parseError('Equation ended unexpededly', 'warning'));
 	}
 	if(statementCount > 1){
-		parseWarnings.push(statementCount + ' statements detected. Treated as implicit multiplication');
+		parseErrors.push(parseError(statementCount + ' statements detected', 'warning'));
 	}
-	//if(tokenIndex < tokens.length -1){
-		//parseWarnings.push('Multiple statements detected. Are you missing an operator? Or Have ended with a =?. Only first statement is evaluated');
-	//}
-	return root;
+
+	return {root: compoundStatement(...statementsWithMult), errors: parseErrors.concat(lexErrors)};
 	
+	function parseError(contents, severety = 'error'){
+		return {type: 'parse', value: contents, severety, position: -1};
+	}
+
 	function eat(type){
 		if(currentToken.type === type){
 			tokenIndex++;
 			currentToken = tokens[tokenIndex];
 		}
 		else{
-			parseErrors.push('Expected ' + type + ' but saw ' + currentToken.type);
+			parseErrors.push(parseError('Expected ' + type + ' but saw ' + currentToken.type));
 		}
 	}
 	
@@ -76,6 +91,7 @@ function parser(line, useRational){
 			const node = level_10();
 			if(currentToken.type === 'RPAREN')
 				eat('RPAREN');
+			node.parens = true;
 			return node;
 		}
 		else if(token.type === 'ABS'){
@@ -96,10 +112,18 @@ function parser(line, useRational){
 			eat('NAN');
 			return numLit(token);
 		}
+		else if(token.type === 'ASSIGN'){
+			eat('ASSIGN');
+			const idToken = currentToken;
+			eat('ID');
+			eat('EQ');
+			const node = level_10();
+			return assign(idToken, node);
+		}
 		if(token.type === 'EOF')
-			parseWarnings.push('Incomplete equation');
+			parseErrors.push(parseError('Incomplete equation', 'warning'));
 		else
-			parseWarnings.push('Unexpected token ' + token.type);
+			parseErrors.push(parseError('Unexpected token ' + token.type, 'warning'));
 		return noOp();
 	}
 	
