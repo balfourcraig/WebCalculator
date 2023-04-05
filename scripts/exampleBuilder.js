@@ -180,7 +180,7 @@ function buildExample(type){
 	}
 
 	function exParenNum(){
-		return '(' + exNum(true, true, false) + ')'; 
+		return '(' + exNum(true, true, true) + ')'; 
 	}
 	
 	function exParenBool(){

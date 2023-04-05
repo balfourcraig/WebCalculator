@@ -73,14 +73,14 @@ function parser(line, useRational){
 		}
 		else if (token.type === 'LPAREN'){
 			eat('LPAREN');
-			const node = level_9();
+			const node = level_10();
 			if(currentToken.type === 'RPAREN')
 				eat('RPAREN');
 			return node;
 		}
 		else if(token.type === 'ABS'){
 			eat('ABS');
-			const node = level_9();
+			const node = level_10();
 			if(currentToken.type === 'ABS')
 				eat('ABS');
 			return absBlock(node);

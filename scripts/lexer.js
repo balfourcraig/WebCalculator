@@ -216,12 +216,14 @@ function getKeyword(word){
 			return 'XOR';
 		case 'MOD':
 			return 'MOD';
-		case 'X':
-			return 'MUL';
+		// case 'X':
+		// 	return 'MUL';
 		case 'I':
 			return 'COMPLEX';
 		case 'NAN':
 			return 'NAN';
+		case 'LET':
+			return 'LET';
 	}
 	return null;
 }

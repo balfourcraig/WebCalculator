@@ -213,3 +213,42 @@ td{
 	width: 100%;
 	height: 150px;
 }
+
+.calcHolder input{
+	font-size: 1.5rem;
+	padding: 1rem;
+	width: 100%;
+	border-radius: 0.5em;
+}
+  
+  #calcOutput {
+	  background-color: #1c2c33;
+	  width: 100%;
+	  padding: 1rem;
+	  font-size: 2rem;
+	  border-radius: 0.5em;
+	  border: 2px lightgray inset;
+	  font-family: monospace;
+  }
+  
+  #calcOutput.error{
+	  border: 2px solid red;
+  }
+  
+  #calcOutput.num{
+	  color: #45ff45;
+	  border: 2px solid #45ff45;
+  }
+  
+  #calcOutput.rational{
+	  color: #bff039;
+	  border: 2px solid #bff039;
+  }
+  
+  #calcOutput.bool{
+	  border: 2px solid #45ff45;
+  }
+  
+  #calcOutput.complex{
+	  border: 2px solid #45ff45;
+  }

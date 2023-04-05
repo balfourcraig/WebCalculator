@@ -56,3 +56,7 @@ function func(token, paramList){
 function variable(token){
 	return {name: 'Variable', value: token.value};
 }
+
+function assign(keyword, id, token){
+	return {name: 'Assign', keyword: keyword, id: id, token: token};
+}
