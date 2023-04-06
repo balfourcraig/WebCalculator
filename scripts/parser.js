@@ -17,8 +17,8 @@ function parser(line, useRational){
 	while(tokenIndex < tokens.length - 1 && itter < 20 && finalTokenIndex != tokenIndex){
 		finalTokenIndex = tokenIndex;
 		//root = binOp(root, level_10(), {type: 'MUL', value: 'MUL'});
-		if(currentToken.type === 'COMMA'){
-			eat('COMMA');
+		if(currentToken.type === 'SEMI'){
+			eat('SEMI');
 		}
 		statements.push(level_10());
 		statementCount++;
@@ -114,11 +114,21 @@ function parser(line, useRational){
 		}
 		else if(token.type === 'ASSIGN'){
 			eat('ASSIGN');
+			const assignments = [];
 			const idToken = currentToken;
 			eat('ID');
 			eat('EQ');
 			const node = level_10();
-			return assign(idToken, node);
+			assignments.push({id: idToken, value: node});
+			while(currentToken.type === 'COMMA'){
+				eat('COMMA');
+				const idToken = currentToken;
+				eat('ID');
+				eat('EQ');
+				const node = level_10();
+				assignments.push({id: idToken, value: node});
+			}
+			return assign(assignments);
 		}
 		if(token.type === 'EOF')
 			parseErrors.push(parseError('Incomplete equation', 'warning'));

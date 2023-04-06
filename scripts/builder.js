@@ -1,16 +1,19 @@
 function buildError(contents, severety = 'error'){
 	return {type: 'build', value: contents, severety, position: -1};
 }
-
-function calculator(line, useRational){
+const reservedWords = ['TRUE', 'FALSE', 'INFINITY', 'NEGATIVEINFINITY', 'RANDOM'];
+function calculator(line, useRational, vars){
 	const buildErrors = [];
 	const globalScope = {};
+	if(vars){
+		for(let v of vars){
+			globalScope[v.name.toUpperCase()] = {value: v.value, type: v.type};
+		}
+	}
 	const parseResult = parser(line, useRational);
 	const root = parseResult.root;
 	const parseErrors = parseResult.errors;
-	//if(lexErrors && lexErrors.length > 0){
-		//return calcError(lexErrors);
-	//}
+
 	let critical = false;
 	if(parseErrors && parseErrors.length > 0){
 		for(let i = 0; i < parseErrors.length; i++){
@@ -82,7 +85,7 @@ function calculator(line, useRational){
 		let expressionCount = 0;
 		for(let i = 0; i < node.value.length; i++){
 			const s = visit(node.value[i]);
-			if(s.name !== 'NoOp' && s.type !== 'VOID'){
+			if(s && s.name !== 'NoOp' && s.type !== 'VOID'){
 				if(expressionCount === 0)
 					result = s;
 				expressionCount++;
@@ -147,39 +150,39 @@ function calculator(line, useRational){
 		buildErrors.push(buildError('Unknown function: ' + node.value, 'warning'));
 		return calcVoid();
 	}
+
+	
 	
 	function visit_Variable(node){
-		switch(node.value.toUpperCase()){
+		const varName = node.value.toUpperCase();
+		switch(varName){
 			case 'TRUE':
 				return calcBool(true);
 			case 'FALSE':
 				return calcBool(false);
-			case 'PI':
-				return calcNum(Math.PI);
 			case 'INFINITY':
 				return calcNum(Infinity);
 			case 'NEGATIVEINFINITY':
 				return calcNum(-Infinity);
-			case 'E':
-				return calcNum(Math.E);
-			case 'PHI':
-				return calcNum(1.61803398874989484820458683436);
-			case 'G':
-				return calcNum(9.80665);
-			case 'C':
-				return calcNum(299792458.0);
 			case 'RANDOM':
 				return calcNum(Math.random());
 		}
-		if(globalScope[node.value] !== undefined)
-			return globalScope[node.value];
+		if(globalScope[varName] !== undefined)
+			return globalScope[varName];
 		buildErrors.push(buildError('Unknown variable: ' + node.value));
 		return calcVoid();
 	}
 
 	function visit_Assign(node){
-		const val = visit(node.value);
-		globalScope[node.id.value] = val;
+		for(let a of node.assignments){
+			const val = visit(a.value);
+			const varName = a.id.value.toUpperCase();
+			if(globalScope[varName] !== undefined)
+				buildErrors.push(buildError('Variable ' + a.id.value + ' already exists', 'warning'));
+			else if (reservedWords.indexOf(varName) !== -1)
+				buildErrors.push(buildError('Cannot assign to reserved word ' + a.id.value));
+			globalScope[varName] = val;
+		}
 		return calcVoid();
 	}
 	

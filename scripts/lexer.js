@@ -285,7 +285,7 @@ function getOneGram(gram){
 		case ',':
 			return 'COMMA';
 		case ';':
-			return 'COMMA';
+			return 'SEMI';
 	}
 	return null;
 }

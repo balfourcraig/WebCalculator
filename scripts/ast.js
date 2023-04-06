@@ -57,8 +57,8 @@ function variable(token){
 	return {name: 'Variable', value: token.value};
 }
 
-function assign(id, token){
-	return {name: 'Assign', id: id, value: token};
+function assign(assignments){
+	return {name: 'Assign', assignments};
 }
 
 function compoundStatement(...statements){

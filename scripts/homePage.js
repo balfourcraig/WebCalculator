@@ -1,3 +1,79 @@
+const globalVars = [
+	{ name: 'pi', value: Math.PI, type: 'NUM', description: 'The ratio of a circle\'s circumference to its diameter' },
+	{ name: 'e', value: Math.E, type: 'NUM', description: 'The base of the natural logarithm' },
+	{ name: 'c', value: 299792458.0, type: 'NUM', description: 'The speed of light in a vacuum' },
+	{ name: 'phi', value: 1.61803398874989484820458683436, type: 'NUM', description: 'The golden ratio' },
+	{ name: 'g', value: 9.80665, type: 'NUM', description: 'The acceleration due to gravity' },
+];
+
+//get variables from varTable
+function getVars(){
+	const varTable = document.getElementById('varTable');
+	const varRows = varTable.getElementsByTagName('tr');
+	const vars = [];
+	let errors = [];
+	for(let i = 0; i < varRows.length; i++){
+		if(varRows[i].getElementsByTagName('td')[0]){
+			const varName = varRows[i].getElementsByTagName('td')[0].getElementsByTagName('input')[0].value;
+			if(varName){
+				const valResult = calculator(varRows[i].getElementsByTagName('td')[1].getElementsByTagName('input')[0].value, false, vars);
+				if(valResult.errors.length === 0){
+					vars.push({ name: varName, value: valResult.result.value, type: valResult.result.type });
+				}
+				errors = errors.concat(valResult.errors);
+			}
+		}
+		
+	}
+	return {vars, errors};
+}
+
+function addVar(id, value, description){
+	const varTable = document.getElementById('varTable');
+	const varRow = document.createElement('tr');
+	varRow.classList.add('varRow');
+	const varName = document.createElement('td');
+	const varNameInp = document.createElement('input');
+	varNameInp.setAttribute('type', 'text');
+	if(id)
+		varNameInp.setAttribute('value', id);
+	varNameInp.addEventListener('input', calc);
+	varName.appendChild(varNameInp);
+	const varValue = document.createElement('td');
+	const varValueInp = document.createElement('input');
+	varValueInp.setAttribute('type', 'text');
+	if(value)
+		varValueInp.setAttribute('value', value);
+	varValueInp.addEventListener('input', calc);
+	varValue.appendChild(varValueInp);
+	const varDesc = document.createElement('td');
+	const varDescInp = document.createElement('input');
+	varDescInp.setAttribute('type', 'text');
+	if(description)
+		varDescInp.setAttribute('value', description);
+	varDesc.appendChild(varDescInp);
+	const del = document.createElement('td');
+	const delBtn = document.createElement('button');
+	delBtn.innerText = '\u2716';
+	delBtn.classList.add('delBtn');
+	delBtn.addEventListener('click', () => {
+		varTable.removeChild(varRow);
+		calc();
+	});
+	del.appendChild(delBtn);
+	varRow.appendChild(varName);
+	varRow.appendChild(varValue);
+	varRow.appendChild(varDesc);
+	varRow.appendChild(del);
+	varTable.appendChild(varRow);
+}
+
+function populateVarTable(){
+	for(let i = 0; i < globalVars.length; i++){
+		addVar(globalVars[i].name, globalVars[i].value, globalVars[i].description);
+	}
+}
+
 function getUrlVars() {
 	var vars = {};
 	var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
@@ -33,10 +109,11 @@ function calc(){
 	const useRational = document.getElementById('useRationalInput').checked;
 	
 	if(input){
-		const calculatorOutput = calculator(input, useRational);
+		const vars = getVars();
+		const calculatorOutput = calculator(input, useRational, vars.vars);
 		const result = calculatorOutput.result;
-		const errors = calculatorOutput.errors;
-		
+		console.log(result)
+		const errors = calculatorOutput.errors.concat(vars.errors);
 		output.setAttribute('class', result.type.toLowerCase());
 		if(result.type == 'ERROR'){
 			output.innerText = 'Invalid or incomplete equation';
@@ -52,7 +129,7 @@ function calc(){
 				if(result.value === Infinity){
 					output.innerText = 'Result too large to represent (IEEE Infinity)';
 				}
-				else if(result.value === Infinity){
+				else if(result.value === -Infinity){
 					output.innerText = 'Result too negative to represent (IEEE -Infinity)';
 				}
 				else if(numFormat == 'dec'){
@@ -142,7 +219,7 @@ function calc(){
 
 window.addEventListener('DOMContentLoaded', () => {
 	applyURLParameters();
-	
+	populateVarTable();
 	calc();
 	
 	document.getElementById('calcInput').addEventListener('input', calc);
@@ -155,6 +232,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('exampleBoolBtn').addEventListener('click', () => {
 		document.getElementById('calcInput').value = buildExample('BOOL');
 		calc();
+	});
+	document.getElementById('addVarBtn').addEventListener('click', () => {
+		addVar('','','');
 	});
 	//document.getElementById('calcBtn').addEventListener('click',calc);
 });

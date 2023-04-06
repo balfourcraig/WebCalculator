@@ -47,17 +47,69 @@
 			<button id="exampleBoolBtn">Example Boolean</button>
 			<br>
 			<a href="https://github.com/balfourcraig/WebCalculator">Source on Github</a>
-			<h2>Color Legend</h2>
-			<ul class="legend">
-				<li class="num">Number: Real numbers including integers and decimals, as well as special values like NaN, Infinity, and NegativeInfinity</li>
-				<li class="rational">Rational: Rational numbers represented as a fraction eg. 1/3</li>
-				<li class="bool">Boolean: True/False only</li>
-				<li class="complex">Complex: Numbers consisting of a real component and an imaginary component (denoted by i)</li>
-				<li class="error">Error: Issues causing the calculator to malfunction</li>
-				<li class="warning">Warning: Issues which may cause unexpected results, but the calculator will attempt to continue through</li>
-			</ul>
-			<hr>
 			
+			<h2>Values</h2>
+			<table id="varTable">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Value</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				
+			</table>
+			<button id="addVarBtn">+ New Var</button>
+			<hr>
+			<h2>Constants</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>True</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
+					</tr>
+					<tr>
+						<td>False</td>
+						<td><span class="bool">Boolean</span></td>
+						<td>Boolean literal</td>
+					</tr>
+					<tr>
+						<td>i</td>
+						<td><span class="complex">Complex</span></td>
+						<td>The imaginary unit</td>
+					</tr>
+					<tr>
+						<td>Infinity</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point infinity</td>
+					</tr>
+					<tr>
+						<td>NegativeInfinity</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point -infinity</td>
+					</tr>
+					<tr>
+						<td>NaN</td>
+						<td><span class="num">Number</span></td>
+						<td>IEEE floating point NaN (Not A Number) value. Note that NaN != NaN</td>
+					</tr>
+					<tr>
+						<td>Random</td>
+						<td><span class="num">Number</span></td>
+						<td>Random number between 0 and 1. Different every time it's used</td>
+					</tr>
+				</tbody>
+			</table>
+			
+			<hr>
 			<p>Functions and values are NOT case sensitive</p>
 			<hr>
 			<h2>Functions</h2>
@@ -179,78 +231,11 @@
 				</tbody>
 			</table>
 			<hr>
-			<h2>Values</h2>
-			<table>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Description</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>c</td>
-						<td><span class="num">Number</span></td>
-						<td>Speed of light in a vacuum in meters/second</td>
-					</tr>
-					<tr>
-						<td>e</td>
-						<td><span class="num">Number</span></td>
-						<td>Approximation of e (Euler's number)</td>
-					</tr>
-					<tr>
-						<td>False</td>
-						<td><span class="bool">Boolean</span></td>
-						<td>Boolean literal</td>
-					</tr>
-					<tr>
-						<td>g</td>
-						<td><span class="num">Number</span></td>
-						<td>Gravitational acceleration on Earth</td>
-					</tr>
-					<tr>
-						<td>i</td>
-						<td><span class="complex">Complex</span></td>
-						<td>The imaginary unit</td>
-					</tr>
-					<tr>
-						<td>Infinity</td>
-						<td><span class="num">Number</span></td>
-						<td>IEEE floating point infinity</td>
-					</tr>
-					<tr>
-						<td>NaN</td>
-						<td><span class="num">Number</span></td>
-						<td>IEEE floating point NaN (Not A Number) value. Note that NaN != NaN</td>
-					</tr>
-					<tr>
-						<td>NegativeInfinity</td>
-						<td><span class="num">Number</span></td>
-						<td>IEEE floating point -infinity</td>
-					</tr>
-					<tr>
-						<td>Phi</td>
-						<td><span class="num">Number</span></td>
-						<td>Approximation of Phi (the golden ratio)</td>
-					</tr>
-					<tr>
-						<td>Pi</td>
-						<td><span class="num">Number</span></td>
-						<td>Approximation of PI</td>
-					</tr>
-					<tr>
-						<td>Random</td>
-						<td><span class="num">Number</span></td>
-						<td>Random number between 0 and 1. Different every time it's used</td>
-					</tr>
-					<tr>
-						<td>True</td>
-						<td><span class="bool">Boolean</span></td>
-						<td>Boolean literal</td>
-					</tr>
-				</tbody>
-			</table>
+			<h2>Using Variables</h2>
+			<p>Variables are created by assigning a value to them with the <code>let</code> keyword, or by adding it to the list of variables below the main input. You can then use the variable in any expression. Variables are not case sensitive.</p>
+			<p>A single <code>let</code> expression can be used to assign multiple comma separated variables as follows: <code>let x = 1, y = 2, z = 3</code> the assignment does not return a value</p>
+			<p>Variables can be assigned to any expression, including other variables. This can be useful in keeping complex equations more simple to read</p>
+			<p>Variables can be reassigned, though it will generate a warning. You may not, however, reassign reserved words such as <code>true</code></p>
 			<hr>
 			<h2>Number formats</h2>
 			<p>Numbers are assumed to be base 10. If you want to input a binary number, prefix it with 0b or 0x for a hexidecimal number. They will be converted to decimal prior to any calculations.</p>
@@ -259,11 +244,10 @@
 			<p>Hex and binary inputs may not contain decimal points, though decimal may. Hex and binary output format will use decimal points where required</p>
 			<p>Hex and binary numbers may both contain as many _ as you need. So 0b10011101 is exactly the same as 0b_1001_1101</p>
 			<p>Scientific notation is partially supported, within the limits of IEEE double precision floating point numbers.</p>
-			
 			<hr>
 
 			<h2>Operators</h2>
-			<p><strong>NOTE:</strong>Operator documentation is incomplete, mostly in regards to types. If in doubt, just try it!</p>
+			<p><strong>NOTE: </strong>Operator documentation is incomplete, mostly in regards to types. If in doubt, just try it!</p>
 			<h3>Unary Operators</h3>
 				<table>
 					<tr>
@@ -278,7 +262,7 @@
 						<th>+</th>
 						<td>Unary plus</td>
 						<td><span class="num">Number</span></td>
-						<td>Positive number. Doesn't really do anything</td>
+						<td>Positive <span class="num">Number</span>. Doesn't really do anything</td>
 					</tr>
 					<tr>
 						<td>Prefix</td>
@@ -292,7 +276,7 @@
 						<th>!, NOT</th>
 						<td>Unary NOT</td>
 						<td><span class="bool">Boolean</span>, <span class="num">Number</span></td>
-						<td>Inverts a boolean, and flips the bits on a number</td>
+						<td>Inverts a <span class="bool">Boolean</span>, and flips the bits on a <span class="num">Number</span></td>
 					</tr>
 					<tr>
 						<td>Postfix</td>
@@ -306,7 +290,7 @@
 						<th>i</th>
 						<td>Imaginary</td>
 						<td><span class="num">Number</span></td>
-						<td>Marks a number as the 'imaginary' component of a <span class="complex">complex number</span>.</td>
+						<td>Marks a <span class="num">Number</span> as the 'imaginary' component of a <span class="complex">complex number</span>.</td>
 					</tr>
 				</table>
 			<h3>Binary Operators</h3>
@@ -351,61 +335,61 @@
 						<th>AND, &amp;, &amp;&amp;</th>
 						<td>AND</td>
 						<td><span class="bool">Boolean</span>, <span class="num">Number</span></td>
-						<td>AND between two booleans, or bitwise AND between two numbers</td>
+						<td>AND between two <span class="bool">Boolean</span>s, or bitwise AND between two <span class="num">Number</span>s</td>
 					</tr>
 					<tr>
 						<th>OR, ||</th>
-						<td>AND</td>
+						<td>OR</td>
 						<td><span class="bool">Boolean</span>, <span class="num">Number</span></td>
-						<td>AND between two booleans, or bitwise AND between two numbers</td>
+						<td>OR between two <span class="bool">Boolean</span>s, or bitwise OR between two <span class="num">Number</span>s</td>
 					</tr>
 					<tr>
 						<th>XOR</th>
 						<td>XOR</td>
-						<td></td>
-						<td></td>
+						<td><span class="bool">Boolean</span>, <span class="num">Number</span></td>
+						<td>XOR between two <span class="bool">Boolean</span>s, or bitwise XOR between two <span class="num">Number</span>s</td>
 					</tr>
 					<tr>
 						<th>MOD, %</th>
 						<td>Modulus</td>
-						<td></td>
-						<td></td>
+						<td><span class="num">Number</span></td>
+						<td>Remainder after integer division</td>
 					</tr>
 					<tr>
 						<th>==, =</th>
 						<td>Equal</td>
-						<td></td>
-						<td></td>
+						<td>ANY</td>
+						<td>Equal to, returns <span class="bool">Boolean</span></td>
 					</tr>
 					<tr>
 						<th>!=, &lt;&gt;</th>
 						<td>Not Equal</td>
-						<td></td>
-						<td></td>
+						<td>ANY</td>
+						<td>Not equal to, returns <span class="bool">Boolean</span></td>
 					</tr>
 					<tr>
 						<th>&lt;</th>
 						<td>Less than</td>
-						<td></td>
-						<td></td>
+						<td><span class="num">Number</span></td>
+						<td>Less than, returns <span class="bool">Boolean</span></td>
 					</tr>
 					<tr>
 						<th>&lt;=</th>
 						<td>Less than or equal to</td>
-						<td></td>
-						<td></td>
+						<td><span class="num">Number</span></td>
+						<td>Less than or equal, returns <span class="bool">Boolean</span></td>
 					</tr>
 					<tr>
 						<th>&gt;</th>
 						<td>Greater than</td>
-						<td></td>
-						<td></td>
+						<td><span class="num">Number</span></td>
+						<td>Greater than, returns <span class="bool">Boolean</span></td>
 					</tr>
 					<tr>
 						<th>&gt;=</th>
 						<td>Greater than or equal to</td>
-						<td></td>
-						<td></td>
+						<td><span class="num">Number</span></td>
+						<td>Greater than or equal, returns <span class="bool">Boolean</span></td>
 					</tr>
 				</table>
 				<h3>Special Operators</h3>
@@ -435,6 +419,17 @@
 						<td>Used for separating arguments to a function</td>
 					</tr>
 				</table>
+			<hr>
+
+			<h2>Color Legend</h2>
+			<ul class="legend">
+				<li class="num">Number: Real numbers including integers and decimals, as well as special values like NaN, Infinity, and NegativeInfinity</li>
+				<li class="rational">Rational: Rational numbers represented as a fraction eg. 1/3</li>
+				<li class="bool">Boolean: True/False only</li>
+				<li class="complex">Complex: Numbers consisting of a real component and an imaginary component (denoted by i)</li>
+				<li class="error">Error: Issues causing the calculator to malfunction</li>
+				<li class="warning">Warning: Issues which may cause unexpected results, but the calculator will attempt to continue through</li>
+			</ul>
 			<hr>
 			
 			<p>To see how it's working under the hood, you can try out the lexer and parser components on their own:</p>
