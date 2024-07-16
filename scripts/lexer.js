@@ -1,4 +1,4 @@
-function beginLex(line){
+function beginLex(line){	
 	let currentChar = null;
 	if(line != null && line.length > 0)
 		currentChar = line[0];
@@ -7,7 +7,6 @@ function beginLex(line){
 	const lexErrors = [];
 	
 	const tokens = [];
-	
 	let t = getToken();
 	while(t.type !== 'EOF'){
 		tokens.push(t);
@@ -39,7 +38,7 @@ function beginLex(line){
 	function id(){
 		let result = '';
 		
-		while (currentChar != null && isLetter(currentChar)){
+		while (currentChar != null && isLetterOrDigit(currentChar)){
 			result += currentChar;
 			advance();
 		}

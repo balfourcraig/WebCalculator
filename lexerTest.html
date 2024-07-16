@@ -11,15 +11,28 @@
 	
 	function lex(){
 		const tokens = beginLex(document.getElementById('lexInput').value);
-		const output = document.getElementById('lexOutput');
-		output.innerHTML = '';
-		const list = document.createElement('ul');
-		for(let i = 0; i < tokens.length; i++){
+		const lexOutput = document.getElementById('lexOutput');
+		lexOutput.innerHTML = '';
+		
+		const lexList = document.createElement('ul');
+		for(let i = 0; i < tokens.tokens.length; i++){
 			const line = document.createElement('li');
-			line.innerText = tokens[i].type + (tokens[i].value === null ? '' : ' : ' + tokens[i].value);
-			list.appendChild(line);
+			line.innerText = tokens.tokens[i].type + (tokens.tokens[i].value === null ? '' : ' : ' + tokens.tokens[i].value);
+			lexList.appendChild(line);
 		}
-		output.appendChild(list);
+		lexOutput.appendChild(lexList);
+
+		const erOutput = document.getElementById('erOutput');
+		erOutput.innerHTML = '';
+		
+		const erList = document.createElement('ul');
+		for(let i = 0; i < tokens.errors.length; i++){
+			const line = document.createElement('li');
+			//{type: 'lex', value: contents, severety, position: column};
+			line.innerText = (tokens.errors[i].value === null ? '' : ' : ' + tokens.errors[i].value) + ', severity: ' +  tokens.errors[i].severety;
+			erList.appendChild(line);
+		}
+		erOutput.appendChild(erList);
 	}
 	
 	window.addEventListener('DOMContentLoaded', () => {
@@ -48,7 +61,13 @@
 		<section>
 			<p>Test the lexer here. Tokens will be printed below, but nothing will be done with them</p>
 			<input id="lexInput" type="text" autofocus>
-			<p id="lexOutput"></p>
+			<div id="outputArea">
+				<h2>Tokens</h2>
+				<p id="lexOutput"></p>
+				<h2>Errors</h2>
+				<p id="erOutput"></p>
+			</div>
+			
 		</section>
 		<div class="scrollOverflow"></div>
 	</div>
